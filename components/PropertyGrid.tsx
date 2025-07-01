@@ -87,7 +87,7 @@ export default function PropertyGrid() {
   if (loading) {
     return (
       <section className="py-10 px-6">
-        <div className="container-mobile">
+        <div className="max-w-[1440px] mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }, (_, i) => (
               <div key={i} className="animate-pulse">
@@ -110,7 +110,7 @@ export default function PropertyGrid() {
           <p className="text-red-500 mb-4">Error: {error.message}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="btn-mobile bg-blue-500 text-white hover:bg-blue-600"
+            className="px-4 py-2 rounded-md transition-colors bg-blue-500 text-white hover:bg-blue-600"
           >
             Try Again
           </button>
@@ -121,7 +121,7 @@ export default function PropertyGrid() {
 
   return (
     <section className="py-10 px-6">
-              <div className="container-mobile">
+      <div className="max-w-[1440px] mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6 text-center">Available Properties</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {data?.properties.map((property) => (

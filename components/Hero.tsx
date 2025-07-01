@@ -23,6 +23,8 @@ export default function Hero() {
       <Image
         src="/hero.png"
         alt="Hero Image"
+        width={400}
+        height={300}
         className="w-full max-w-md rounded-lg shadow-md"
       />
     </section>
