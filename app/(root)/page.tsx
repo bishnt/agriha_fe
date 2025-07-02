@@ -1,10 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import Header from "@/components/header"
-import HeroSection from "@/components/hero-section"
-import PropertyGrid from "@/components/property-grid"
+import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import type { Property, SearchFilters } from "@/lib/types"
+
+// Dynamically import components to avoid SSR issues
+const Header = dynamic(() => import("@/components/header"), { ssr: false })
+const HeroSection = dynamic(() => import("@/components/hero-section"), { ssr: false })
+const PropertyGrid = dynamic(() => import("@/components/property-grid"), { ssr: false })
 
 // Mock data for development - remove when backend is ready
 const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
@@ -19,16 +22,21 @@ const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
   area: 650,
   areaUnit: "sq ft",
   isAttached: true,
-  imageUrl: "/images/property-interior.jpg",
+  imageUrl: "/placeholder.svg?height=200&width=300",
   description: "Beautiful modern apartment with all amenities",
   amenities: ["Parking", "Security", "Garden"],
 }))
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [filters, setFilters] = useState<SearchFilters>({})
   const [properties, setProperties] = useState<Property[]>(mockProperties)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Uncomment when backend is ready
   // const { data, loading: queryLoading, error } = useQuery(
@@ -37,7 +45,7 @@ export default function HomePage() {
   //     variables: searchQuery
   //       ? { query: searchQuery, limit: 20, offset: 0 }
   //       : { filters, limit: 20, offset: 0 },
-  //     skip: false
+  //     skip: !mounted
   //   }
   // );
 
@@ -76,12 +84,22 @@ export default function HomePage() {
     console.log("Post property clicked")
   }
 
+  // Show loading state until component is mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#002B6D] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading AGRIHA...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header onSignIn={handleSignIn} onPostProperty={handlePostProperty} />
-
       <HeroSection onSearch={handleSearch} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <PropertyGrid properties={properties} loading={loading} onViewDetails={handleViewDetails} />
       </main>
