@@ -21,6 +21,8 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
+        raleway: ['var(--font-raleway)'], // Use the CSS variable
+        montserrat: ['var(--font-montserrat)'],
       },
       colors: {
         border: "hsl(var(--border))",
