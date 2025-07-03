@@ -19,7 +19,7 @@ export default function PropertyCard({ property, onViewDetails }: PropertyCardPr
   return (
     <Card className="overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 rounded-lg">
       <div className="relative h-48">
-        <Image src={property.imageUrl || "/placeholder.svg"} alt={property.title} fill className="object-cover" />
+        <Image src={"/images/property-interior.jpg"} alt={property.title} fill className="object-cover" />
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-md text-sm font-medium text-gray-800 shadow-sm">
           {property.location}
         </div>

@@ -7,7 +7,5 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "NEXT_PUBLIC_GRAPHQL_ENDPOINT": "@graphql_endpoint"
-  }
+  "env": {  }
 }

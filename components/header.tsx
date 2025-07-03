@@ -21,7 +21,9 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center">
             <Image src="/logo.svg" alt="AGRIHA" width={46} height={28} className="mr-3" />
-            <span className="text-2xl font-bold text-[#002B6D] tracking-tight">AGRIHA.</span>
+            <Image src="/Agriha..png" alt="AGRIHA" width={160} height={40} />
+
+
           </Link>
 
           <div className="flex items-center space-x-3">

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import PropertyCard from "./property-card"
 import type { Property } from "@/lib/types"
 
@@ -18,7 +19,14 @@ export default function PropertyGrid({
   onLoadMore,
   hasMore = false,
 }: PropertyGridProps) {
-  if (loading && properties.length === 0) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Show loading skeleton during initial render
+  if (!mounted || (loading && properties.length === 0)) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 8 }).map((_, index) => (
@@ -35,7 +43,7 @@ export default function PropertyGrid({
     )
   }
 
-  if (properties.length === 0) {
+  if (mounted && properties.length === 0 && !loading) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
@@ -57,7 +65,7 @@ export default function PropertyGrid({
           <button
             onClick={onLoadMore}
             disabled={loading}
-            className="bg-[#002B6D] hover:bg-[#001a4d] text-white px-8 py-3 rounded-md font-medium disabled:opacity-50"
+            className="bg-[#002B6D] hover:bg-[#001a4d] text-white px-8 py-3 rounded-md font-medium disabled:opacity-50 transition-colors"
           >
             {loading ? "Loading..." : "Load More Properties"}
           </button>

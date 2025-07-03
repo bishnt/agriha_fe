@@ -1,13 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import dynamic from "next/dynamic"
 import type { Property, SearchFilters } from "@/lib/types"
-
-// Dynamically import components to avoid SSR issues
-const Header = dynamic(() => import("@/components/header"), { ssr: false })
-const HeroSection = dynamic(() => import("@/components/hero-section"), { ssr: false })
-const PropertyGrid = dynamic(() => import("@/components/property-grid"), { ssr: false })
+import Header from "@/components/header"
+import HeroSection from "@/components/hero-section"
+import PropertyGrid from "@/components/property-grid"
 
 // Mock data for development - remove when backend is ready
 const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
@@ -31,23 +28,14 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [filters, setFilters] = useState<SearchFilters>({})
-  const [properties, setProperties] = useState<Property[]>(mockProperties)
+  const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+    // Set initial properties after mount to avoid hydration mismatch
+    setProperties(mockProperties)
   }, [])
-
-  // Uncomment when backend is ready
-  // const { data, loading: queryLoading, error } = useQuery(
-  //   searchQuery ? SEARCH_PROPERTIES : GET_PROPERTIES,
-  //   {
-  //     variables: searchQuery
-  //       ? { query: searchQuery, limit: 20, offset: 0 }
-  //       : { filters, limit: 20, offset: 0 },
-  //     skip: !mounted
-  //   }
-  // );
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -101,7 +89,11 @@ export default function HomePage() {
       <Header onSignIn={handleSignIn} onPostProperty={handlePostProperty} />
       <HeroSection onSearch={handleSearch} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <PropertyGrid properties={properties} loading={loading} onViewDetails={handleViewDetails} />
+        <PropertyGrid 
+          properties={properties} 
+          loading={loading} 
+          onViewDetails={handleViewDetails} 
+        />
       </main>
     </div>
   )

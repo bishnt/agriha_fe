@@ -11,13 +11,14 @@ const inter = Inter({
 export const metadata = {
   title: "AGRIHA - Find Homes, Far From Home",
   description: "Real estate platform for finding rental properties",
-  generator: "v0.dev",
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="antialiased">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className="antialiased" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   )
 }
