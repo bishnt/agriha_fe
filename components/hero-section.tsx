@@ -105,16 +105,21 @@ export default function HeroSection({
             </div>
 
             <div
-              className="
-                absolute
-                rounded-[32px]
-                overflow-hidden
-                w-[720px]
-                h-[400px]
-                top-[113px]
-                right-[222px]
+              className=" absolute
+    rounded-[32px]
+    overflow-hidden
+    w-[720px] h-[400px]
+    lg:w-[720px] lg:h-[400px]
+    md:w-[500px] md:h-[300px]
+    sm:w-[300px] sm:h-[200px]
+    top-[113px] right-[222px]
+    lg:top-[113px] lg:right-[222px]
+    md:top-[80px] md:right-[20px]
+    sm:top-[60px] sm:right-[10px]
               "
+              
             >
+              
               <Image
                 src={heroImage || "/placeholder.svg"}
                 alt="Modern residential buildings"

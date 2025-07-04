@@ -5,6 +5,7 @@ import type { Property, SearchFilters } from "@/lib/types"
 import Header from "@/components/header"
 import HeroSection from "@/components/hero-section"
 import PropertyGrid from "@/components/property-grid"
+import MobileNavBar from "@/components/MobileNavBar"
 
 // Mock data for development - remove when backend is ready
 const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
@@ -94,6 +95,7 @@ export default function HomePage() {
           loading={loading} 
           onViewDetails={handleViewDetails} 
         />
+        
       </main>
     </div>
   )
