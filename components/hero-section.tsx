@@ -113,7 +113,7 @@ export default function HeroSection({
     md:w-[500px] md:h-[300px]
     sm:w-[300px] sm:h-[200px]
     top-[113px] right-[222px]
-    lg:top-[113px] lg:right-[222px]
+    lg:top-[113px] lg:right-[30px]
     md:top-[80px] md:right-[20px]
     sm:top-[60px] sm:right-[10px]
               "

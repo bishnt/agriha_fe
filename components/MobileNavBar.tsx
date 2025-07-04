@@ -50,7 +50,7 @@ const MobileNavBar: React.FC = () => {
 
           {/* Profile Item */}
           <li className="flex justify-center items-center">
-            <Link href="/userprofile" className="flex flex-col items-center text-xs transition-colors duration-300">
+            <Link href="/profile" className="flex flex-col items-center text-xs transition-colors duration-300">
               <div className={`flex flex-col items-center justify-center w-[84px] h-[48px] rounded-[32px] ${pathname === '/userprofile' ? 'bg-[#0B316F] text-white font-bold' : 'text-gray-600'}`}>
                 <Image
                   src="/placeholder-user.jpg"
