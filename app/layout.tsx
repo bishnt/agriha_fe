@@ -17,9 +17,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="antialiased" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      {/* Apply the background classes directly to the body tag */}
+      <body className={`${inter.className} bg-[ghost-white] sm:bg-white`}>
         {children}
-          <div className="pb-[72px] sm:pb-0">
+        <div className="pb-[72px] sm:pb-0">
           {/* The MobileNavBar component is included here, making it appear on all pages */}
           <MobileNavBar />
         </div>

@@ -104,30 +104,22 @@ export default function HeroSection({
               </form>
             </div>
 
-            <div
-              className=" absolute
+<div
+  className="relative
     rounded-[32px]
     overflow-hidden
-    w-[720px] h-[400px]
-    lg:w-[720px] lg:h-[400px]
-    md:w-[500px] md:h-[300px]
-    sm:w-[300px] sm:h-[200px]
-    top-[113px] right-[222px]
-    lg:top-[113px] lg:right-[30px]
-    md:top-[80px] md:right-[20px]
-    sm:top-[60px] sm:right-[10px]
-              "
-              
-            >
-              
-              <Image
-                src={heroImage || "/placeholder.svg"}
-                alt="Modern residential buildings"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
+    w-[90vw] max-w-[720px]
+    aspect-[16/9]
+    top-1/2 left-[39%] -translate-y-1/2 -translate-x-1/2"
+>
+  <Image
+    src={heroImage || "/placeholder.svg"}
+    alt="Modern residential buildings"
+    fill
+    className="object-cover"
+    priority
+  />
+</div>
           </div>
         </div>
       </section>

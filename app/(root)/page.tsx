@@ -10,21 +10,20 @@ import MobileNavBar from "@/components/MobileNavBar"
 // Mock data for development - remove when backend is ready
 const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
   id: `property-${index + 1}`,
-  title: `Modern Apartment ${index + 1}`,
-  price: 50000,
-  currency: "NPRs",
-  priceType: "per month",
+  title: `Hostel Name ${index + 1}`,
   location: "Pulchowk, Lalitpur",
-  bedrooms: 1,
+  currency: "Rs",
+  price: 50000,
+  priceType: "per-month",
+  bedrooms: 2, // Changed from 1 to 2, more common for apartments
   bathrooms: 1,
   area: 650,
-  areaUnit: "sq ft",
+  areaUnit: "m2",
   isAttached: true,
-  imageUrl: "/placeholder.svg?height=200&width=300",
-  description: "Beautiful modern apartment with all amenities",
-  amenities: ["Parking", "Security", "Garden"],
-}))
-
+  isLiked: false, // Defaulting to false, can be toggled
+  type: "Room", // Defaulting to Apartment, you can change per index if needed
+  imageUrl: "/images/property-interior.jpg", // Using your existing image path
+}));
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>("")

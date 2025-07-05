@@ -1,18 +1,17 @@
 export interface Property {
-  id: string
-  title: string
-  price: number
-  currency: string
-  priceType: string // "per month", "per year", etc.
-  location: string
-  bedrooms: number
-  bathrooms: number
-  area: number
-  areaUnit: string
-  isAttached: boolean
-  imageUrl: string
-  description?: string
-  amenities?: string[]
+  id: string;
+  title: string;
+  location: string;
+  currency: string;
+  price: number;
+  priceType: string; // e.g., "per month"
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  areaUnit: string; // e.g., "m2"
+  isAttached: boolean; // for bathroom
+  isLiked: boolean;
+  type: string; // Add this new property, e.g., "Room", "Apartment", "House"
 }
 
 export interface SearchFilters {
