@@ -12,6 +12,9 @@ export interface Property {
   isAttached: boolean; // for bathroom
   isLiked: boolean;
   type: string; // Add this new property, e.g., "Room", "Apartment", "House"
+  createdAt: Date;
+  views: number;
+
 }
 
 export interface SearchFilters {

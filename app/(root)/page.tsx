@@ -6,6 +6,7 @@ import Header from "@/components/header"
 import HeroSection from "@/components/hero-section"
 import PropertyGrid from "@/components/property-grid"
 import MobileNavBar from "@/components/MobileNavBar"
+import { View } from "lucide-react"
 
 // Mock data for development - remove when backend is ready
 const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
@@ -22,7 +23,9 @@ const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
   isAttached: true,
   isLiked: false, // Defaulting to false, can be toggled
   type: "Room", // Defaulting to Apartment, you can change per index if needed
-  imageUrl: "/images/property-interior.jpg", // Using your existing image path
+  imageUrl: "/images/property-interior.jpg",
+  createdAt: new Date,
+  views: 100, // Using your existing image path
 }));
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
