@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff, Check, X, ArrowRight, Sparkles, Lock, Shield } from "lucide-react"
+import { Eye, EyeOff, Check, X, ArrowRight, Sparkles, Lock, Shield, X as LucideX } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function SetPasswordPage() {
@@ -79,7 +79,7 @@ export default function SetPasswordPage() {
         sessionStorage.removeItem("temp_verification_token")
         sessionStorage.removeItem("registration_mobile")
 
-        router.push("/dashboard")
+        router.push("/profile")
       } else {
         setError(data.message || "Failed to create account")
       }
@@ -99,33 +99,43 @@ export default function SetPasswordPage() {
       </div>
 
       {/* Floating Elements */}
-      <div className="absolute top-20 left-20 animate-float">
-        <Sparkles className="w-6 h-6 text-[#002b6d]/60" />
+      <div className="absolute top-10 left-10 animate-float">
+        <Sparkles className="w-4 h-4 text-[#002b6d]/60" />
       </div>
-      <div className="absolute top-40 right-32 animate-float-delayed">
-        <Lock className="w-5 h-5 text-[#002b6d]/60" />
+      <div className="absolute top-24 right-16 animate-float-delayed">
+        <Lock className="w-3 h-3 text-[#002b6d]/60" />
       </div>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 transform hover:scale-[1.02] transition-all duration-500">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-2">
+        <div className="w-full max-w-xl mx-auto">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 lg:p-6 transform hover:scale-[1.01] transition-all duration-500 relative">
+            {/* Exit/Cross Button */}
+            <button
+              onClick={() => router.push("/")}
+              aria-label="Exit auth"
+              className="absolute top-3 right-3 z-20 p-0.5 rounded-xl bg-gradient-to-br from-pink-500 via-rose-400 to-red-400 hover:from-pink-600 hover:to-red-500 transition-all shadow-lg"
+              style={{ minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <LucideX className="w-5 h-5 text-white" />
+            </button>
+
             {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <Image src="/logo.svg" alt="AGRIHA" width={140} height={45} className="h-12 w-auto" />
+            <div className="flex justify-center mb-4">
+              <Image src="/logo.svg" alt="AGRIHA" width={90} height={30} className="h-7 w-auto" />
             </div>
 
             {/* Header */}
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-gradient-to-r from-[#002b6d] to-[#002b6d] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <Lock className="w-10 h-10 text-white" />
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#002b6d] to-[#002b6d] rounded-full flex items-center justify-center mx-auto mb-3 shadow-xl">
+                <Lock className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-[#002b6d] to-[#002b6d] bg-clip-text text-transparent mb-3">
+              <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 via-[#002b6d] to-[#002b6d] bg-clip-text text-transparent mb-2">
                 Set Your Password
               </h1>
-              <p className="text-gray-600 text-lg font-medium">Create a secure password for your account</p>
+              <p className="text-gray-600 text-sm font-medium">Create a secure password for your account</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Password Input */}
               <div className="relative group">
                 <div className="relative">
@@ -137,15 +147,15 @@ export default function SetPasswordPage() {
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField("")}
                     placeholder="Password"
-                    className="h-14 pl-4 pr-12 bg-white/50 border-2 border-gray-200/50 rounded-2xl text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="h-8 pl-3 pr-8 bg-white/50 border border-gray-200/50 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 shadow-md hover:shadow-lg text-xs"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#002b6d] transition-colors duration-200"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#002b6d] transition-colors duration-200"
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
@@ -161,37 +171,37 @@ export default function SetPasswordPage() {
                     onFocus={() => setFocusedField("confirmPassword")}
                     onBlur={() => setFocusedField("")}
                     placeholder="Confirm Password"
-                    className="h-14 pl-4 pr-12 bg-white/50 border-2 border-gray-200/50 rounded-2xl text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 shadow-lg hover:shadow-xl"
+                    className="h-8 pl-3 pr-8 bg-white/50 border border-gray-200/50 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 shadow-md hover:shadow-lg text-xs"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#002b6d] transition-colors duration-200"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#002b6d] transition-colors duration-200"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
               {/* Password Requirements */}
-              <div className="bg-gray-50/50 border border-gray-200/50 rounded-2xl p-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[#002b6d]" />
+              <div className="bg-gray-50/50 border border-gray-200/50 rounded-lg p-3">
+                <h3 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                  <Shield className="w-3 h-3 text-[#002b6d]" />
                   Password Requirements
                 </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
                   {passwordRequirements.map((req, index) => (
-                    <div key={index} className="flex items-center gap-3">
+                    <div key={index} className="flex items-center gap-2">
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        className={`w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 ${
                           req.test(password) ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"
                         }`}
                       >
-                        {req.test(password) ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                        {req.test(password) ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
                       </div>
                       <span
-                        className={`text-sm transition-colors duration-300 ${
+                        className={`text-xs transition-colors duration-300 ${
                           req.test(password) ? "text-green-600 font-medium" : "text-gray-500"
                         }`}
                       >
@@ -205,45 +215,45 @@ export default function SetPasswordPage() {
               {/* Password Match Indicator */}
               {confirmPassword && (
                 <div
-                  className={`flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 ${
+                  className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
                     doPasswordsMatch ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
                   }`}
                 >
                   <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                    className={`w-4 h-4 rounded-full flex items-center justify-center ${
                       doPasswordsMatch ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
                     }`}
                   >
-                    {doPasswordsMatch ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    {doPasswordsMatch ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
                   </div>
-                  <span className={`text-sm font-medium ${doPasswordsMatch ? "text-green-600" : "text-red-600"}`}>
+                  <span className={`text-xs font-medium ${doPasswordsMatch ? "text-green-600" : "text-red-600"}`}>
                     {doPasswordsMatch ? "Passwords match" : "Passwords do not match"}
                   </span>
                 </div>
               )}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 animate-shake">
-                  <p className="text-red-600 text-sm font-medium">{error}</p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-2 animate-shake">
+                  <p className="text-red-600 text-xs font-medium">{error}</p>
                 </div>
               )}
 
               {/* Create Account Button */}
               <Button
                 type="submit"
-                className="w-full h-14 bg-gradient-to-r from-[#002b6d] to-[#002b6d] hover:from-[#002b6d] hover:to-[#002b6d] text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full h-8 bg-gradient-to-r from-[#002b6d] to-[#002b6d] hover:from-[#002b6d] hover:to-[#002b6d] text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-[1.01] transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-xs"
                 disabled={isLoading || !isPasswordValid || !doPasswordsMatch}
               >
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-center gap-1">
                   {isLoading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Creating Account...
                     </>
                   ) : (
                     <>
                       Create Account
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
                     </>
                   )}
                 </span>
@@ -251,10 +261,10 @@ export default function SetPasswordPage() {
             </form>
 
             {/* Security Note */}
-            <div className="mt-8 bg-blue-50/50 border border-blue-200/50 rounded-2xl p-4">
-              <div className="flex items-center justify-center gap-2">
-                <Shield className="w-4 h-4 text-[#002b6d]" />
-                <p className="text-[#002b6d] text-sm font-medium">Your password is encrypted and stored securely</p>
+            <div className="mt-4 bg-blue-50/50 border border-blue-200/50 rounded-lg p-2">
+              <div className="flex items-center justify-center gap-1">
+                <Shield className="w-3 h-3 text-[#002b6d]" />
+                <p className="text-[#002b6d] text-xs font-medium">Your password is encrypted and stored securely</p>
               </div>
             </div>
           </div>

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
 
-// Simple session management without external dependency
 function getToken(): string | null {
   if (typeof window === "undefined") return null
   return localStorage.getItem("agriha_token")
@@ -71,9 +71,22 @@ export default function DashboardPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Image src="/logo.svg" alt="AGRIHA" width={120} height={40} className="h-8 w-auto" />
-            </div>
+            <Link href="/" className="flex items-center">
+            <Image
+              src="/logo.svg"
+              alt="AGRIHA"
+              width={46}
+              height={28}
+              className="mr-1 w-5 h-auto md:w-10"
+            />
+            <Image
+              src="/Agriha..png"
+              alt="AGRIHA"
+              width={160}
+              height={40}
+              className="w-20 h-auto md:w-36"
+            />
+          </Link>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">
                 Welcome, {userData?.name || userData?.phone || userData?.email}
@@ -119,29 +132,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">Search Properties</Button>
-              <Button variant="outline" className="w-full bg-transparent">
-                Post Property
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent">
-                View Favorites
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-500">No recent activity to display.</p>
-            </CardContent>
-          </Card>
+        
         </div>
       </main>
     </div>

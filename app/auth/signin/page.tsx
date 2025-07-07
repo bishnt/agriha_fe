@@ -10,7 +10,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Mail, Phone, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { Mail, Phone, Eye, EyeOff, ArrowRight, X as LucideX } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 
@@ -60,7 +60,7 @@ export default function SignInPage() {
       if (response.ok && data.token) {
         localStorage.setItem("agriha_token", data.token)
         sessionStorage.setItem("user_data", JSON.stringify(data.user))
-        router.push("/dashboard")
+        router.push("/profile")
       } else {
         setError(data.message || "Invalid credentials")
       }
@@ -74,7 +74,7 @@ export default function SignInPage() {
   const handleSocialSignIn = async (provider: "google" | "facebook") => {
     try {
       const result = await signIn(provider, {
-        callbackUrl: "/dashboard",
+        callbackUrl: "/profile",
         redirect: false,
       })
 
@@ -83,7 +83,7 @@ export default function SignInPage() {
         if (session?.accessToken) {
           localStorage.setItem("agriha_token", session.accessToken as string)
         }
-        router.push("/dashboard")
+        router.push("/profile")
       }
     } catch (error) {
       setError("Social sign-in failed. Please try again.")
@@ -94,7 +94,16 @@ export default function SignInPage() {
     <div className="min-h-screen h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
       <div className="w-full max-w-4xl px-1 py-2 lg:px-2 lg:py-4 flex flex-col lg:flex-row items-center justify-center gap-0 h-full">
         {/* Outer rounded box */}
-        <div className="w-full bg-white/90 rounded-2xl shadow-2xl border border-white/30 flex flex-col lg:flex-row overflow-hidden h-full">
+        <div className="w-full bg-white/90 rounded-2xl shadow-2xl border border-white/30 flex flex-col lg:flex-row overflow-hidden h-full relative">
+          {/* Exit/Cross Button */}
+          <button
+            onClick={() => router.push("/")}
+            aria-label="Exit auth"
+            className="absolute top-3 right-3 z-20 p-0.5 rounded-xl bg-gradient-to-br from-pink-500 via-rose-400 to-red-400 hover:from-pink-600 hover:to-red-500 transition-all shadow-lg"
+            style={{ minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <LucideX className="w-5 h-5 text-white" />
+          </button>
           {/* Left Side - Welcome Message (hidden on mobile) */}
           <div className="hidden lg:flex flex-1 max-w-md w-full bg-gradient-to-br from-[#002b6d] to-[#001a42] rounded-none lg:rounded-l-2xl shadow-none p-8 text-white flex-col justify-center min-h-[350px]">
             <h2 className="text-3xl font-bold mb-4">

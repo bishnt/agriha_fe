@@ -6,7 +6,6 @@ import { AlertTriangle } from "lucide-react"
 export default function NotFoundPage() {
   return (
     <>
-      <Header />
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-md w-full">
           <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-r from-[#002b6d] to-[#001a42] rounded-full mb-6">

@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowRight, Sparkles, Shield, Clock } from "lucide-react"
+import { ArrowRight, Sparkles, Shield, Clock, X as LucideX } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function VerifyOTPPage() {
@@ -71,6 +71,14 @@ export default function VerifyOTPPage() {
     setIsLoading(true)
     setError("")
 
+    // MOCK: If OTP is 123456, skip API and proceed
+    if (otpString === "123456") {
+      sessionStorage.setItem("temp_verification_token", "mock-temp-token-980000000")
+      router.push("/auth/set-password")
+      setIsLoading(false)
+      return
+    }
+
     try {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
@@ -132,45 +140,45 @@ export default function VerifyOTPPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-indigo-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -top-24 -right-24 w-56 h-56 bg-gradient-to-br from-blue-400/20 to-indigo-600/20 rounded-full blur-2xl animate-pulse"></div>
+        <div className="absolute -bottom-24 -left-24 w-56 h-56 bg-gradient-to-tr from-indigo-400/20 to-blue-600/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Floating Elements */}
-      <div className="absolute top-20 left-20 animate-float">
-        <Sparkles className="w-6 h-6 text-[#002b6d]/60" />
-      </div>
-      <div className="absolute top-40 right-32 animate-float-delayed">
-        <Shield className="w-5 h-5 text-[#002b6d]/60" />
-      </div>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12 transform hover:scale-[1.02] transition-all duration-500">
-            {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <Image src="/logo.svg" alt="AGRIHA" width={140} height={45} className="h-12 w-auto" />
-            </div>
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-2">
+        <div className="w-full max-w-xl mx-auto">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 lg:p-6 transform hover:scale-[1.01] transition-all duration-500 relative">
+            {/* Exit/Cross Button */}
+            <button
+              onClick={() => router.push("/")}
+              aria-label="Exit auth"
+              className="absolute top-3 right-3 z-20 p-0.5 rounded-xl bg-gradient-to-br from-pink-500 via-rose-400 to-red-400 hover:from-pink-600 hover:to-red-500 transition-all shadow-lg"
+              style={{ minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <LucideX className="w-5 h-5 text-white" />
+            </button>
+
 
             {/* Header */}
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-gradient-to-r from-[#002b6d] to-[#002b6d] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <Shield className="w-10 h-10 text-white" />
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-[#002b6d] to-[#002b6d] rounded-full flex items-center justify-center mx-auto mb-3 shadow-xl">
+                <Shield className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-[#002b6d] to-[#002b6d] bg-clip-text text-transparent mb-3">
+              <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 via-[#002b6d] to-[#002b6d] bg-clip-text text-transparent mb-2">
                 Verify Your Number
               </h1>
-              <p className="text-gray-600 text-lg font-medium mb-2">Enter the 6-digit code sent to</p>
-              <p className="text-[#002b6d] font-semibold text-lg">{mobileNumber}</p>
+              <p className="text-gray-600 text-sm font-medium mb-1">Enter the 6-digit code sent to</p>
+              <p className="text-[#002b6d] font-semibold text-sm">{mobileNumber}</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* OTP Input */}
               <div className="flex justify-center">
-                <div className="flex gap-3 lg:gap-4">
+                <div className="flex gap-2 lg:gap-3">
                   {otp.map((digit, index) => (
                     <div key={index} className="relative group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#002b6d]/20 to-[#002b6d]/20 rounded-2xl blur transition-all duration-300 opacity-0 group-focus-within:opacity-100"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#002b6d]/20 to-[#002b6d]/20 rounded-xl blur transition-all duration-300 opacity-0 group-focus-within:opacity-100"></div>
                       <Input
                         ref={(el) => {
                           inputRefs.current[index] = el
@@ -181,7 +189,7 @@ export default function VerifyOTPPage() {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
-                        className="relative w-12 h-12 lg:w-14 lg:h-14 text-center text-lg lg:text-xl font-bold bg-white border border-gray-300 rounded-xl focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
+                        className="relative w-8 h-8 lg:w-10 lg:h-10 text-center text-base lg:text-lg font-bold bg-white border border-gray-300 rounded-lg focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                       />
                     </div>
                   ))}
@@ -189,8 +197,8 @@ export default function VerifyOTPPage() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 animate-shake">
-                  <p className="text-red-600 text-sm font-medium text-center">{error}</p>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-2 animate-shake">
+                  <p className="text-red-600 text-xs font-medium text-center">{error}</p>
                 </div>
               )}
 
@@ -198,18 +206,18 @@ export default function VerifyOTPPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-14 bg-gradient-to-r from-[#002b6d] to-[#002b6d] hover:from-[#002b6d] hover:to-[#002b6d] text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 group"
+                className="w-full h-8 bg-gradient-to-r from-[#002b6d] to-[#002b6d] hover:from-[#002b6d] hover:to-[#002b6d] text-white font-semibold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.01] transition-all duration-300 group text-xs"
               >
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-center gap-1">
                   {isLoading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Verifying...
                     </>
                   ) : (
                     <>
                       Verify Code
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" />
                     </>
                   )}
                 </span>
@@ -217,15 +225,15 @@ export default function VerifyOTPPage() {
             </form>
 
             {/* Resend Section */}
-            <div className="text-center mt-8">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <p className="text-gray-600">
+            <div className="text-center mt-4">
+              <div className="flex items-center justify-center gap-1 mb-2">
+                <Clock className="w-3 h-3 text-gray-400" />
+                <p className="text-gray-600 text-xs">
                   Didn't receive the code?{" "}
                   {canResend ? (
                     <button
                       onClick={handleResendOTP}
-                      className="text-[#002b6d] hover:text-[#002b6d] font-semibold hover:underline transition-all duration-200"
+                      className="text-[#002b6d] hover:text-[#002b6d] font-semibold hover:underline transition-all duration-200 text-xs"
                     >
                       Resend Code
                     </button>
@@ -236,10 +244,10 @@ export default function VerifyOTPPage() {
               </div>
 
               {/* Security Note */}
-              <div className="bg-blue-50/50 border border-blue-200/50 rounded-2xl p-4">
-                <div className="flex items-center justify-center gap-2">
-                  <Shield className="w-4 h-4 text-[#002b6d]" />
-                  <p className="text-[#002b6d] text-sm font-medium">Your information is secure and encrypted</p>
+              <div className="bg-blue-50/50 border border-blue-200/50 rounded-xl p-2">
+                <div className="flex items-center justify-center gap-1">
+                  <Shield className="w-3 h-3 text-[#002b6d]" />
+                  <p className="text-[#002b6d] text-xs font-medium">Your information is secure and encrypted</p>
                 </div>
               </div>
             </div>

@@ -4,6 +4,15 @@ export async function POST(request: NextRequest) {
   try {
     const { mobileNumber, otp } = await request.json()
 
+    // MOCK: If phone and otp match, return mock success
+    if ((mobileNumber === "980000000" || mobileNumber === "+980000000") && otp === "123456") {
+      return NextResponse.json({
+        success: true,
+        tempToken: "mock-temp-token-980000000",
+        message: "OTP verified (mock)",
+      })
+    }
+
     // GraphQL mutation for verifying OTP
     const graphqlQuery = {
       query: `

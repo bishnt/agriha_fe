@@ -14,11 +14,12 @@ const inter = Inter({
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAuthPage = pathname.startsWith("/auth");
+  const isProfilePage = pathname === "/profile" || pathname === "/(root)/profile";
   return (
     <body className={`${inter.className} bg-[ghost-white] sm:bg-white ${isAuthPage ? "overflow-hidden" : ""}`}>
-      <Header />
+      {!isProfilePage && <Header />}
       {children}
-      {!isAuthPage && (
+      {!isProfilePage && !isAuthPage && (
         <div className="pb-[72px] sm:pb-0">
           <MobileNavBar />
         </div>

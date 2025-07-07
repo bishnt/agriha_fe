@@ -4,6 +4,31 @@ export async function POST(request: NextRequest) {
   try {
     const { emailOrPhone, password } = await request.json()
 
+    // MOCK: If phone and password match, return mock user
+    if ((emailOrPhone === "9813522044" || emailOrPhone === "+9813522044") && password === "Bishrant") {
+      return NextResponse.json({
+        token: "mock-token-9813522044",
+        user: {
+          id: "1",
+          email: null,
+          phone: "9813522044",
+          name: "bishrant"
+        }
+      })
+    }
+    // NEW MOCK: 9800000000 and Bishrant
+    if ((emailOrPhone === "9800000000" || emailOrPhone === "+9800000000") && password === "Bishrant") {
+      return NextResponse.json({
+        token: "mock-token-9800000000",
+        user: {
+          id: "2",
+          email: null,
+          phone: "9800000000",
+          name: "bishrant"
+        }
+      })
+    }
+
     // GraphQL mutation for sign in
     const graphqlQuery = {
       query: `
