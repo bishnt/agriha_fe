@@ -7,6 +7,7 @@ import HeroSection from "@/components/hero-section"
 import PropertyGrid from "@/components/property-grid"
 import MobileNavBar from "@/components/MobileNavBar"
 import { View } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 // Mock data for development - remove when backend is ready
 const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
@@ -29,16 +30,31 @@ const mockProperties: Property[] = Array.from({ length: 8 }, (_, index) => ({
 }));
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
-  const [searchQuery, setSearchQuery] = useState<string>("")
   const [filters, setFilters] = useState<SearchFilters>({})
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState<string>("")
+  const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
     // Set initial properties after mount to avoid hydration mismatch
     setProperties(mockProperties)
   }, [])
+
+  const handleViewDetails = (propertyId: string) => {
+    // Navigate to property details page
+    window.location.href = `/property/${propertyId}`
+  }
+
+  const handleSignIn = () => {
+    router.push("/auth/signin")
+  }
+
+  const handlePostProperty = () => {
+    // Handle post property
+    console.log("Post property clicked")
+  }
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -60,21 +76,6 @@ export default function HomePage() {
     }, 500)
   }
 
-  const handleViewDetails = (propertyId: string) => {
-    // Navigate to property details page
-    window.location.href = `/property/${propertyId}`
-  }
-
-  const handleSignIn = () => {
-    // Handle sign in
-    console.log("Sign in clicked")
-  }
-
-  const handlePostProperty = () => {
-    // Handle post property
-    console.log("Post property clicked")
-  }
-
   // Show loading state until component is mounted
   if (!mounted) {
     return (
@@ -89,7 +90,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onSignIn={handleSignIn} onPostProperty={handlePostProperty} />
       <HeroSection onSearch={handleSearch} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <PropertyGrid 

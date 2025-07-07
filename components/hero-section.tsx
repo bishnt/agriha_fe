@@ -304,15 +304,11 @@ export default function HeroSection({
               </div>
             </div>
           </form>
-          {/* Mobile Filter Button - Styled to match the image */}
+          {/* Mobile Filter Button */}
           <Button
             type="button"
             onClick={() => setShowFilterPopup(true)}
-            className="
-              bg-white text-gray-500 hover:bg-gray-100 rounded-lg
-              px-3 py-1 text-sm font-semibold flex items-center gap-1
-              shadow-[0px_1px_4px_0px_rgba(12,12,13,0.05)] shadow-[0px_1px_4px_0px_rgba(12,12,13,0.10)]
-            "
+            className="bg-white text-gray-500 hover:bg-gray-100 rounded-lg px-3 py-1 text-sm font-semibold flex items-center gap-1 shadow-[0px_1px_4px_0px_rgba(12,12,13,0.05)] shadow-[0px_1px_4px_0px_rgba(12,12,13,0.10)]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -346,15 +342,11 @@ export default function HeroSection({
               </div>
             </div>
           </form>
-          {/* Desktop Filter Button - Styled to match the image */}
+          {/* Desktop Filter Button */}
           <Button
             type="button"
             onClick={() => setShowFilterPopup(true)}
-            className="
-              ml-4 bg-white text-gray-500 hover:bg-gray-100 rounded-lg
-              px-3 py-1 text-sm font-semibold flex items-center gap-1
-              shadow-[0px_1px_4px_0px_rgba(12,12,13,0.05)] shadow-[0px_1px_4px_0px_rgba(12,12,13,0.10)]
-            "
+            className="ml-4 bg-white text-gray-500 hover:bg-gray-100 rounded-lg px-3 py-1 text-sm font-semibold flex items-center gap-1 shadow-[0px_1px_4px_0px_rgba(12,12,13,0.05)] shadow-[0px_1px_4px_0px_rgba(12,12,13,0.10)]"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -381,21 +373,13 @@ export default function HeroSection({
 
               <form onSubmit={handleSearch}>
                 <div
-                  className="
-                    w-full px-3 py-3 bg-white rounded-lg
-                    shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]
-                    inline-flex justify-center items-center gap-6
-                  "
+                  className="w-full px-3 py-3 bg-white rounded-lg shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] inline-flex justify-center items-center gap-6"
                 >
                   <div
                     data-show-icon="False"
                     data-state="Enabled"
                     data-style="Filled"
-                    className="
-                      w-[484px] bg-white rounded-lg overflow-hidden
-                      outline outline-2 outline-offset-[-1px] outline-sky-900
-                      inline-flex flex-col justify-center items-center gap-2
-                    "
+                    className="w-[484px] bg-white rounded-lg overflow-hidden outline outline-2 outline-offset-[-1px] outline-sky-900 inline-flex flex-col justify-center items-center gap-2"
                   >
                     <Input
                       name="search"
@@ -404,29 +388,17 @@ export default function HeroSection({
                       className="h-12 pl-4 pr-4 text-base border-0 rounded-lg focus:ring-2 focus:ring-[#002B6D] focus:border-transparent bg-transparent placeholder:text-gray-500 shadow-none"
                     />
                   </div>
-
                   <Button
                     type="submit"
-                    className="
-                      h-auto bg-[#002B6D] hover:bg-[#001a4d] text-white
-                      px-8 py-4 rounded-lg font-bold text-base
-                      shadow-none transition-all duration-200
-                      font-raleway
-                    "
+                    className="h-auto bg-[#002B6D] hover:bg-[#001a4d] text-white px-8 py-4 rounded-lg font-bold text-base shadow-none transition-all duration-200 font-raleway"
                   >
                     Search
                   </Button>
                 </div>
               </form>
             </div>
-
             <div
-              className="relative
-                rounded-[32px]
-                overflow-hidden
-                w-[90vw] max-w-[720px]
-                aspect-[16/9]
-                top-1/2 left-[39%] -translate-y-1/2 -translate-x-1/2"
+              className="relative rounded-[32px] overflow-hidden w-[90vw] max-w-[720px] aspect-[16/9] top-1/2 left-[39%] -translate-y-1/2 -translate-x-1/2"
             >
               <Image
                 src={heroImage || "/placeholder.svg"}
