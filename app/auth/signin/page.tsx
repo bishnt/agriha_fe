@@ -131,7 +131,7 @@ export default function SignInPage() {
 </div>
 
           
-          {/* Right Side - Sign In Form (smaller, less padding, less clutter) */}
+       
           <div className="flex-1 w-full bg-white/90 rounded-none lg:rounded-r-2xl shadow-none p-2 sm:p-4 lg:p-8 flex flex-col justify-center min-h-[280px] lg:min-h-[350px] h-full items-center max-w-sm mx-auto">
             <div className="flex justify-center mb-4">
               <Image src="/logo.svg" alt="AGRIHA" width={48} height={48} className="h-10 w-auto" />
@@ -210,6 +210,7 @@ export default function SignInPage() {
               </Button>
             </form>
             {/* Divider */}
+            <div className="block lg:hidden w-full">
             <div className="relative my-4 w-full flex items-center justify-center">
               <Separator className="bg-gray-200" />
               <span className="absolute bg-white px-2 text-gray-400 text-xs font-medium left-1/2 -translate-x-1/2">or continue with</span>
@@ -239,6 +240,7 @@ export default function SignInPage() {
                 </svg>
                 Facebook
               </Button>
+            </div>
             </div>
             {/* Register Link */}
             <div className="text-center mt-1">
