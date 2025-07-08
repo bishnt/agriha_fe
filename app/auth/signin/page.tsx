@@ -100,7 +100,7 @@ export default function SignInPage() {
 {/* Left Side - Social Login */}
 <div className="hidden lg:flex flex-col justify-center items-center text-white bg-gradient-to-br from-[#002b6d] to-[#001a42] max-w-md w-full rounded-none lg:rounded-l-2xl px-6 py-10 space-y-6">
               <h2 className="text-3xl font-bold mb-4">
-              Welcome back!
+              Welcome Back!
             </h2>
             <p className="text-lg opacity-90">
               Sign in to explore verified properties and hostels, or list your own, all in one trusted platform.
@@ -243,7 +243,7 @@ export default function SignInPage() {
             </div>
             </div>
             {/* Register Link */}
-            <div className="text-center mt-1">
+            <div className="text-center mt-1 py-4">
               <p className="text-gray-600 text-xs">
                 New to AGRIHA?{" "}
                 <Link href="/auth/register" className="text-[#0B316F] hover:text-[#1B447A] font-semibold hover:underline transition-all duration-200">

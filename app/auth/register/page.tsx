@@ -88,7 +88,7 @@ export default function RegisterPage() {
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                   <Home className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-blue-100 text-base">Browse premium listings</span>
+                <span className="text-blue-100 text-base">Browse and list premium properties</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
@@ -159,7 +159,7 @@ export default function RegisterPage() {
               </Button>
             </form>
             {/* Already have an account? */}
-            <div className="text-center mt-1">
+            <div className="text-center mt-1 py-4">
               <p className="text-gray-600 text-xs">
                 Already have an account?{' '}
                 <Link href="/auth/signin" className="text-[#0B316F] hover:text-[#1B447A] font-semibold hover:underline transition-all duration-200">
