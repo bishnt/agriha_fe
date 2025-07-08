@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff, Check, X, ArrowRight, Sparkles, Lock, Shield, X as LucideX } from "lucide-react"
@@ -119,10 +118,6 @@ export default function SetPasswordPage() {
               <LucideX className="w-5 h-5 text-white" />
             </button>
 
-            {/* Logo */}
-            <div className="flex justify-center mb-4">
-              <Image src="/logo.svg" alt="AGRIHA" width={90} height={30} className="h-7 w-auto" />
-            </div>
 
             {/* Header */}
             <div className="text-center mb-4">
