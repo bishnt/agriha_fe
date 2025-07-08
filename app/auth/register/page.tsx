@@ -73,18 +73,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
-      <div className="w-full max-w-4xl px-1 py-2 lg:px-2 lg:py-4 flex flex-col lg:flex-row items-center justify-center gap-0 h-full">
+<div className="w-full max-w-4xl px-1 py-2 lg:px-2 lg:py-4 flex flex-col lg:flex-row items-center justify-center gap-0 h-[70%]">
         {/* Outer rounded box */}
         <div className="w-full bg-white/90 rounded-2xl shadow-2xl border border-white/30 flex flex-col lg:flex-row overflow-hidden h-full relative">
-          {/* Exit/Cross Button */}
-          <button
-            onClick={() => router.push("/")}
-            aria-label="Exit auth"
-            className="absolute top-3 right-3 z-20 p-0.5 rounded-xl bg-gradient-to-br from-pink-500 via-rose-400 to-red-400 hover:from-pink-600 hover:to-red-500 transition-all shadow-lg"
-            style={{ minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <LucideX className="w-5 h-5 text-white" />
-          </button>
+
           {/* Left Side - About Message (hidden on mobile) */}
           <div className="hidden lg:flex flex-1 max-w-md w-full bg-gradient-to-br from-[#002b6d] to-[#001a42] rounded-none lg:rounded-l-2xl shadow-none p-8 text-white flex-col justify-center min-h-[350px]">
             <h2 className="text-3xl font-bold mb-4">Create account</h2>
