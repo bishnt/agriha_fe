@@ -1,12 +1,18 @@
-import { Property } from '@/types/property';
+/* /lib/mockData.ts */
 
-export const mockProperties: Property[] = [
+export const mockProperties = [
   {
     id: 1,
+    title: "Luxury Apartment in Downtown",
     propertyName: "Luxury Apartment in Downtown",
     propertyType: "Apartment",
+    type: "Apartment",
+
     description: "Modern luxury apartment with city views and premium amenities.",
     price: 50000,
+    currency: "NPR",
+    priceType: "per month",
+
     isForRent: true,
     isForSale: false,
     bedrooms: 2,
@@ -14,55 +20,85 @@ export const mockProperties: Property[] = [
     kitchen: 1,
     floor: 15,
     furnishing: "Attached",
+    isAttached: true,
+
     area: 650,
+    areaUnit: "m2",
     city: "Lalitpur",
     state: "Bagmati",
     country: "Nepal",
     address: "Pulchowk, Lalitpur",
+    
     landmark: "Near Pulchowk Campus",
     latitude: 27.6783,
     longitude: 85.3206,
+
     status: "available",
     isActive: true,
     isFeatured: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-    imageUrl: "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800"
+    isLiked: false,
+    views: 0,
+
+    createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-01-20"),
+    imageUrl:
+      "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
   {
     id: 2,
+    title: "Spacious Family Villa",
     propertyName: "Spacious Family Villa",
     propertyType: "Villa",
+    type: "Villa",
+
     description: "Beautiful family villa with garden and parking space.",
     price: 85000,
+    currency: "NPR",
+    priceType: "total",
+
     isForRent: false,
     isForSale: true,
     bedrooms: 4,
     bathrooms: 3,
     kitchen: 2,
     floor: 2,
-    furnishing: "Semi-furnished",
+    furnishing: "Semi‑furnished",
+    isAttached: false,
+
     area: 1200,
+    areaUnit: "m2",
     city: "Kathmandu",
     state: "Bagmati",
     country: "Nepal",
     address: "Baluwatar, Kathmandu",
+    location: "Baluwatar, Kathmandu",
     landmark: "Near Embassy Area",
     latitude: 27.7172,
     longitude: 85.3240,
+
     status: "available",
     isActive: true,
     isFeatured: false,
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-18'),
-    imageUrl: "https://images.pexels.com/photos/1396132/pexels-photo-1396132.jpeg?auto=compress&cs=tinysrgb&w=800"
+    isLiked: false,
+    views: 0,
+
+    createdAt: new Date("2024-01-10"),
+    updatedAt: new Date("2024-01-18"),
+    imageUrl:
+      "https://images.pexels.com/photos/1396132/pexels-photo-1396132.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
   {
     id: 3,
+    title: "Modern Office Space",
     propertyName: "Modern Office Space",
     propertyType: "Commercial",
+    type: "Commercial",
+
     description: "Prime office space in business district with modern facilities.",
     price: 120000,
+    currency: "NPR",
+    priceType: "per month",
+
     isForRent: true,
     isForSale: false,
     bedrooms: 0,
@@ -70,27 +106,42 @@ export const mockProperties: Property[] = [
     kitchen: 1,
     floor: 8,
     furnishing: "Unfurnished",
+    isAttached: false,
+
     area: 2000,
+    areaUnit: "m2",
     city: "Kathmandu",
     state: "Bagmati",
     country: "Nepal",
     address: "New Baneshwor, Kathmandu",
+    location: "New Baneshwor, Kathmandu",
     landmark: "Near World Trade Center",
     latitude: 27.6857,
     longitude: 85.3458,
+
     status: "available",
     isActive: true,
     isFeatured: true,
-    createdAt: new Date('2024-01-12'),
-    updatedAt: new Date('2024-01-22'),
-    imageUrl: "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg?auto=compress&cs=tinysrgb&w=800"
+    isLiked: false,
+    views: 0,
+
+    createdAt: new Date("2024-01-12"),
+    updatedAt: new Date("2024-01-22"),
+    imageUrl:
+      "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
   {
     id: 4,
+    title: "Cozy Studio Apartment",
     propertyName: "Cozy Studio Apartment",
     propertyType: "Studio",
+    type: "Studio",
+
     description: "Perfect studio apartment for young professionals.",
     price: 25000,
+    currency: "NPR",
+    priceType: "per month",
+
     isForRent: true,
     isForSale: false,
     bedrooms: 1,
@@ -98,27 +149,42 @@ export const mockProperties: Property[] = [
     kitchen: 1,
     floor: 5,
     furnishing: "Fully Furnished",
+    isAttached: true,
+
     area: 400,
+    areaUnit: "m2",
     city: "Bhaktapur",
     state: "Bagmati",
     country: "Nepal",
     address: "Dudhpati, Bhaktapur",
+    location: "Dudhpati, Bhaktapur",
     landmark: "Near Khwopa College",
-    latitude: 27.6710,
+    latitude: 27.671,
     longitude: 85.4298,
+
     status: "available",
     isActive: true,
     isFeatured: false,
-    createdAt: new Date('2024-01-08'),
-    updatedAt: new Date('2024-01-16'),
-    imageUrl: "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=800"
+    isLiked: false,
+    views: 0,
+
+    createdAt: new Date("2024-01-08"),
+    updatedAt: new Date("2024-01-16"),
+    imageUrl:
+      "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
   {
     id: 5,
+    title: "Penthouse with Terrace",
     propertyName: "Penthouse with Terrace",
     propertyType: "Penthouse",
+    type: "Penthouse",
+
     description: "Luxurious penthouse with panoramic city views and terrace.",
     price: 150000,
+    currency: "NPR",
+    priceType: "total",
+
     isForRent: false,
     isForSale: true,
     bedrooms: 3,
@@ -126,19 +192,28 @@ export const mockProperties: Property[] = [
     kitchen: 2,
     floor: 20,
     furnishing: "Luxury Furnished",
+    isAttached: true,
+
     area: 1800,
+    areaUnit: "m2",
     city: "Kathmandu",
     state: "Bagmati",
     country: "Nepal",
     address: "Durbarmarg, Kathmandu",
+    location: "Durbarmarg, Kathmandu",
     landmark: "Heart of the City",
     latitude: 27.7026,
     longitude: 85.3149,
+
     status: "available",
     isActive: true,
     isFeatured: true,
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-25'),
-    imageUrl: "https://images.pexels.com/photos/1571453/pexels-photo-1571453.jpeg?auto=compress&cs=tinysrgb&w=800"
-  }
+    isLiked: false,
+    views: 0,
+
+    createdAt: new Date("2024-01-05"),
+    updatedAt: new Date("2024-01-25"),
+    imageUrl:
+      "https://images.pexels.com/photos/1571453/pexels-photo-1571453.jpeg?auto=compress&cs=tinysrgb&w=800",
+  },
 ];

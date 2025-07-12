@@ -16,12 +16,12 @@ interface PropertyCardProps {
 export default function PropertyCard({ property, onViewDetails, onToggleLike }: PropertyCardProps) {
 
   const handleViewDetails = () => {
-    onViewDetails?.(property.id);
+    onViewDetails?.(property.id.toString());
   }
 
   const handleLikeClick = (event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent card click when clicking heart
-    onToggleLike?.(property.id, !property.isLiked);
+    onToggleLike?.(property.id.toString(), !property.isLiked);
   };
 
   return (
@@ -29,13 +29,13 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike }: 
       <div className="flex flex-row md:block"> {/* This enables side-by-side on mobile, stacked on desktop */}
         <div className="relative w-2/5 flex-shrink-0 h-auto min-h-[120px] md:w-full md:h-48">
           <Image
-            src={"/images/property-interior.jpg"}
+            src={property.imageUrl || "/images/property.interior.jpg"}
             alt={property.title}
             fill
             className="object-cover"
           />
           <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-800 shadow-sm">
-            {property.location}
+            {property.address}
           </div>
           {/* Heart icon for desktops (hidden on mobile, but moved to desktop-only button section) */}
           {/* <Button
@@ -56,7 +56,7 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike }: 
             </h3>
 
             <div className="text-base font-bold text-gray-800 mb-3 md:text-xl">
-              {property.currency}. {property.price.toLocaleString()}
+              NRs. {property.price.toLocaleString()}
               <span className="text-xs font-normal text-gray-600 ml-1 md:text-sm">{property.priceType}</span>
             </div>
 

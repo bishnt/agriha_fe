@@ -9,6 +9,7 @@ export interface Property {
   price: number;
   priceType: string; // e.g., "per month" (added)
   type: string; // e.g., "Room", "Apartment", "House" (added)
+
   isForRent: boolean;
   isForSale: boolean;
   bedrooms: number;
@@ -18,6 +19,7 @@ export interface Property {
   floor: number;
   furnishing?: string;
   area?: number;
+  areaUnit?: string; // e.g., "m2", "sqft" (added)
   city: string;
   state: string;
   country: string;
