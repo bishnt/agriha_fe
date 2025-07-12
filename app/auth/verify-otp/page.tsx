@@ -149,15 +149,7 @@ export default function VerifyOTPPage() {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-2">
         <div className="w-full max-w-xl mx-auto">
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-4 lg:p-6 transform hover:scale-[1.01] transition-all duration-500 relative">
-            {/* Exit/Cross Button */}
-            <button
-              onClick={() => router.push("/")}
-              aria-label="Exit auth"
-              className="absolute top-3 right-3 z-20 p-0.5 rounded-xl bg-gradient-to-br from-pink-500 via-rose-400 to-red-400 hover:from-pink-600 hover:to-red-500 transition-all shadow-lg"
-              style={{ minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <LucideX className="w-5 h-5 text-white" />
-            </button>
+
 
 
             {/* Header */}

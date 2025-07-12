@@ -24,6 +24,7 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
 
   // Determine context
   const isAuthPage = pathname.startsWith("/auth");
+  const isAgentPage = pathname.startsWith("/agent");
   const isHomePage = pathname === "/";
 
   const handleSignIn = () => {
@@ -85,7 +86,7 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
               </div>
             </form>
           )}
-          {!isAuthPage && !isHomePage && (
+          {!isAuthPage && !isHomePage && !isAgentPage && (
             <form
               onSubmit={(e) => {
                 e.preventDefault();

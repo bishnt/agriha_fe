@@ -20,5 +20,5 @@ export default function ApolloWrapper({ children }: ApolloWrapperProps) {
     return <>{children}</>
   }
 
-  return <ApolloProvider client={apolloClient}>{children}</ApolloProvider>
+  return <ApolloProvider client={apolloClient()}>{children}</ApolloProvider>
 }
