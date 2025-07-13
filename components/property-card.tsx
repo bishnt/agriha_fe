@@ -37,19 +37,9 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike }: 
           <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-800 shadow-sm">
             {property.address}
           </div>
-          {/* Heart icon for desktops (hidden on mobile, but moved to desktop-only button section) */}
-          {/* <Button
-            onClick={handleLikeClick}
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white focus:ring-2 focus:ring-[#002B6D] focus:ring-offset-2 md:flex hidden" // Show only on md and up
-            aria-label={property.isLiked ? "Unlike property" : "Like property"}
-          >
-            <Heart className={`w-5 h-5 transition-all duration-200 ${property.isLiked ? 'fill-[#002B6D] text-[#002B6D]' : 'text-gray-500 hover:text-red-500'}`} />
-          </Button> */}
         </div>
 
-        <CardContent className="py-3 px-4 md:p-6 w-3/5 md:w-full flex flex-col justify-between">
+        <CardContent className="py-3 px-4 md:p-4 w-3/5 md:w-full flex flex-col justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900 leading-tight mb-2 md:text-xl md:font-bold">
               {property.title}
@@ -61,28 +51,28 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike }: 
             </div>
 
             {/* Mobile / Desktop details layout */}
-          <div className="grid grid-cols-2 gap-y-2 items-center justify-between text-xs text-gray-600 pt-2 border-t border-gray-100
-                    md:flex md:items-center md:justify-between md:text-sm md:pt-2 md:border-t md:border-gray-100">
-  <div className="flex items-center gap-1">
-    <Square className="w-3.5 h-3.5" />
-    <span className="font-medium text-xs">
-      {property.area}{property.areaUnit}
-    </span>
-  </div>
-  <div className="flex items-center gap-1">
-    <Home className="w-3.5 h-3.5" />
-    <span className="font-medium">{property.type}</span>
-  </div>
-  <div className="flex items-center gap-1">
-    <Bed className="w-3.5 h-3.5" />
-    <span className="font-medium">{property.bedrooms}</span>
-  </div>
-  <div className="flex items-center gap-1">
-    <Bath className="w-3.5 h-3.5 flex-shrink-0" />
-    <span className="font-medium text-xs whitespace-nowrap">{property.isAttached ? "Attached" : "Shared"}</span>
-  </div>
-</div>
-</div>
+            <div className="grid grid-cols-2 gap-y-2 items-center justify-between text-xs text-gray-600 pt-2 border-t border-gray-100
+                    md:flex md:items-center md:justify-between md:text-xs md:pt-2 md:border-t md:border-gray-100">
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Square className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium text-xs">
+                  {property.area}{property.areaUnit}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium">{property.type}</span>
+              </div>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Bed className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium">{property.bedrooms}</span>
+              </div>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Bath className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium text-xs whitespace-nowrap">{property.isAttached ? "Attached" : "Shared"}</span>
+              </div>
+            </div>
+          </div>
 
           <div className="flex gap-2 mt-4 md:hidden"> {/* Mobile buttons */}
             <Button

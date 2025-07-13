@@ -13,9 +13,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       {/* Next.js requires exactly one <body> here */}
-      <body>
-        <Providers>
+      <body className="volumecontrol-initialized">
+          <Providers>
           {/* Handles header / mobile nav + body‑class logic */}
+          
           <ClientLayout>{children}</ClientLayout>
         </Providers>
       </body>
