@@ -14,10 +14,10 @@ interface HeaderProps {
     email: string
   } | null
   onSignIn?: () => void
-  onPostProperty?: () => void
+  // Remove onPostProperty from props as it will be handled internally
 }
 
-export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) {
+export default function Header({ user, onSignIn }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname();
@@ -34,6 +34,11 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
       router.push("/auth/signin")
     }
   }
+
+  // New handler for Post Property button
+  const handlePostProperty = () => {
+    router.push("/agent/dashboard");
+  };
 
   return (
     <header className="bg-white border-b border-gray-100 shadow-sm">
@@ -118,7 +123,7 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
           {!isAuthPage && (
             <div className="hidden md:flex items-center space-x-2">
               <Button
-                onClick={onPostProperty}
+                onClick={handlePostProperty} // Use the new handler
                 className="bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-1.5 rounded-md font-medium text-xs transition-all duration-200"
               >
                 Post Property
@@ -160,7 +165,7 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
         {!isAuthPage && isMenuOpen && (
           <div className="md:hidden mt-3 flex flex-col space-y-2">
             <Button
-              onClick={onPostProperty}
+              onClick={handlePostProperty} // Use the new handler
               className="w-full bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-2 rounded-md text-sm"
             >
               Post Property
@@ -190,4 +195,3 @@ export default function Header({ user, onSignIn, onPostProperty }: HeaderProps) 
     </header>
   )
 }
-
