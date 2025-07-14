@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PropertyFormData } from '@/types/property';
+import { PropertyFormData } from '@/lib/types';
 import { CREATE_PROPERTY_MUTATION, GET_AGENT_PROPERTIES_QUERY } from '@/lib/graphql';
 import { ArrowLeft, Save, MapPin, DollarSign, Home, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
