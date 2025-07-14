@@ -7,7 +7,7 @@ import HeroSection from "@/components/hero-section";
 import PropertyGrid from "@/components/property-grid";
 import MobileNavBar from "@/components/MobileNavBar";
 import { useRouter } from "next/navigation";
-import { mockProperties } from "@/lib/mockData"; // ✅ Import from external file
+import { mockProperties } from "@/lib/mockData1"; // ✅ Import from external file
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
