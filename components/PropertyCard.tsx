@@ -1,133 +1,130 @@
-'use client';
+// components/PropertyCard.tsx
+"use client"
 
+import Image from "next/image"
 import React from 'react';
-import { Property } from '@/types/property';
-import { Button } from '@/components/ui/button';
-import { Heart, MapPin, Bed, Bath, Square, Home } from 'lucide-react';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Bed, Bath, Square, Home, Heart } from "lucide-react"
+import type { Property } from "@/lib/types"
 
 interface PropertyCardProps {
   property: Property;
+  onViewDetails?: (propertyId: string) => void;
+  onToggleLike?: (propertyId: string, isLiked: boolean) => void;
+  isDesktopListView?: boolean; // True when desktop is in "list" mode (Image 1 style)
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  const formatPrice = (price: number) => {
-    if (price >= 100000) {
-      return `Rs. ${(price / 100000).toFixed(1)}L`;
-    } else if (price >= 1000) {
-      return `Rs. ${(price / 1000).toFixed(0)}K`;
-    }
-    return `Rs. ${price.toLocaleString()}`;
-  };
+export default function PropertyCard({ property, onViewDetails, onToggleLike, isDesktopListView = false }: PropertyCardProps) {
 
-  const getPriceLabel = () => {
-    if (property.isForRent && property.isForSale) {
-      return 'per-month / for sale';
-    } else if (property.isForRent) {
-      return 'per-month';
-    } else if (property.isForSale) {
-      return '';
-    }
-    return '';
+  const handleViewDetails = () => {
+    onViewDetails?.(property.id.toString());
+  }
+
+  const handleLikeClick = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click when clicking heart
+    onToggleLike?.(property.id.toString(), !property.isLiked);
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-100">
-      {/* Property Image */}
-      <div className="relative h-48 bg-gray-200">
-        {property.imageUrl ? (
-          <img
-            src={property.imageUrl}
-            alt={property.propertyName}
-            className="w-full h-full object-cover"
+    <Card className="overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 rounded-lg">
+      {/*
+        Main card inner layout:
+        - Mobile: Always flex-row (image left, details right)
+        - Desktop Grid (isDesktopListView=false): flex-col (image top, details below)
+        - Desktop List (isDesktopListView=true): flex-row (image left, details right, full width)
+      */}
+      <div className={`
+        ${isDesktopListView ? 'flex flex-row' : 'flex flex-col md:flex-row lg:flex-col'}
+      `}>
+        {/* Image Wrapper */}
+        <div className={`
+          relative flex-shrink-0 min-h-[120px]
+          ${isDesktopListView
+            ? 'w-2/5 h-auto' // Desktop List: Image takes 2/5 width
+            : 'w-full h-48 md:w-2/5 md:h-auto lg:w-full lg:h-48' // Mobile/Desktop Grid: Mobile image 2/5, Desktop Grid image w-full h-48. MD breakpoint is for switching to list for narrow desktop only.
+          }
+        `}>
+          <Image
+            src={property.imageUrl || "/images/property.interior.jpg"}
+            alt={property.title}
+            fill
+            className="object-cover"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Home className="h-12 w-12 text-gray-400" />
-          </div>
-        )}
-        
-        {/* Location Badge */}
-        <div className="absolute bottom-3 left-3 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
-          <div className="flex items-center space-x-1">
-            <MapPin className="h-3 w-3" />
-            <span>{property.city}, {property.state}</span>
+          <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-800 shadow-sm">
+            {property.address}
           </div>
         </div>
 
-        {/* Featured Badge */}
-        {property.isFeatured && (
-          <div className="absolute top-3 left-3 bg-[#002b6d] text-white px-2 py-1 rounded text-xs font-medium">
-            Featured
-          </div>
-        )}
+        {/* CardContent */}
+        <CardContent className={`
+          py-3 px-4 flex flex-col justify-between
+          ${isDesktopListView
+            ? 'w-3/5' // Desktop List: Content takes 3/5 width
+            : 'w-full md:w-3/5 lg:w-full md:p-4' // Mobile/Desktop Grid: Content takes w-full, then 3/5 on narrow desktop, then w-full on larger desktop
+          }
+        `}>
+          <div>
+            <h3 className="text-base font-semibold text-gray-900 leading-tight mb-2 md:text-xl md:font-bold">
+              {property.title}
+            </h3>
 
-        {/* Heart Icon */}
-        <button className="absolute top-3 right-3 p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all">
-          <Heart className="h-4 w-4 text-gray-600 hover:text-red-500" />
-        </button>
+            <div className="text-base font-bold text-gray-800 mb-3 md:text-xl">
+              NRs. {property.price.toLocaleString()}
+              <span className="text-xs font-normal text-gray-600 ml-1 md:text-sm">{property.priceType}</span>
+            </div>
+
+            {/* Details layout */}
+            <div className={`
+              grid grid-cols-2 gap-y-2 items-center justify-between text-xs text-gray-600 pt-2 border-t border-gray-100
+              ${isDesktopListView
+                ? '' // No extra classes needed for desktop list view
+                : 'md:flex md:items-center md:justify-between' // Desktop Grid: flex row for details
+              }
+            `}>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Square className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium text-xs">
+                  {property.area}{property.areaUnit}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Home className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium">{property.type}</span>
+              </div>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Bed className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium">{property.bedrooms}</span>
+              </div>
+              <div className="flex items-center gap-1 md:gap-0.5 flex-shrink-0">
+                <Bath className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-medium text-xs whitespace-nowrap">{property.isAttached ? "Attached" : "Shared"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              onClick={handleViewDetails}
+              variant="outline"
+              className="flex-grow border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white bg-transparent font-semibold text-sm py-2.5 rounded-lg transition-all duration-200"
+            >
+              View Details
+            </Button>
+
+            <Button
+              onClick={handleLikeClick}
+              variant="outline"
+              size="icon"
+              className="border-[#002B6D] hover:bg-[#002B6D] group flex-shrink-0"
+              aria-label={property.isLiked ? "Unlike property" : "Like property"}
+            >
+              <Heart className={`w-5 h-5 transition-all duration-200 ${property.isLiked ? 'fill-[#002B6D] text-[#002B6D] group-hover:fill-white group-hover:text-white' : 'text-[#002B6D] group-hover:text-white'}`} />
+            </Button>
+          </div>
+        </CardContent>
       </div>
-
-      {/* Property Details */}
-      <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
-          {property.propertyName}
-        </h3>
-
-        {/* Price */}
-        <div className="mb-3">
-          <div className="flex items-baseline space-x-1">
-            <span className="text-2xl font-bold text-gray-900">
-              {formatPrice(property.price)}
-            </span>
-            {getPriceLabel() && (
-              <span className="text-sm text-gray-600">{getPriceLabel()}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Property Features */}
-        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
-          {property.area && (
-            <div className="flex items-center space-x-1">
-              <Square className="h-4 w-4" />
-              <span>{property.area}m²</span>
-            </div>
-          )}
-          
-          {property.bedrooms > 0 && (
-            <div className="flex items-center space-x-1">
-              <Bed className="h-4 w-4" />
-              <span>{property.bedrooms}</span>
-            </div>
-          )}
-          
-          {property.bathrooms > 0 && (
-            <div className="flex items-center space-x-1">
-              <Bath className="h-4 w-4" />
-              <span>{property.bathrooms}</span>
-            </div>
-          )}
-          
-          {property.furnishing && (
-            <div className="flex items-center space-x-1">
-              <Home className="h-4 w-4" />
-              <span>{property.furnishing}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex space-x-2">
-          <Button variant="outline" className="flex-1" size="sm">
-            View Details
-          </Button>
-          <Button variant="ghost" size="icon" className="shrink-0">
-            <Heart className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default PropertyCard;
+    </Card>
+  )
+}

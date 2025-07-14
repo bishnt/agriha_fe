@@ -1,8 +1,9 @@
+// components/PropertyGrid.tsx
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import PropertyCard from "./property-card"
-import type { Property } from "@/lib/types"
+import PropertyCard from "./property-card" // PropertyCard is still imported for its internal rendering logic
+import type { Property } from "@/lib/types" // Corrected path
 
 type SortOption = "relevant" | "recently-posted" | "most-popular"
 
@@ -13,6 +14,8 @@ interface PropertyGridProps {
   onLoadMore?: () => void
   hasMore?: boolean
   onSortChange?: (sortOrder: SortOption) => void
+  children?: React.ReactNode;
+  viewMode?: "grid" | "list"; // Prop for view mode (controls desktop layout)
 }
 
 export default function PropertyGrid({
@@ -22,6 +25,8 @@ export default function PropertyGrid({
   onLoadMore,
   hasMore = false,
   onSortChange,
+  children,
+  viewMode = "grid", // Default to desktop grid (Image 2)
 }: PropertyGridProps) {
   const [mounted, setMounted] = useState(false)
   const [activeSort, setActiveSort] = useState<SortOption>("relevant")
@@ -62,27 +67,35 @@ export default function PropertyGrid({
   const sortedProperties = [...properties].sort((a, b) => {
     switch (activeSort) {
       case "recently-posted":
-        // Assuming 'createdAt' or a similar date field exists on your Property type
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        return (new Date(b.createdAt || 0).getTime() || 0) - (new Date(a.createdAt || 0).getTime() || 0);
       case "most-popular":
-        // Assuming 'views' or 'likes' or similar metric exists
-        return (b.views || 0) - (a.views || 0)
+        return (b.views || 0) - (a.views || 0);
       case "relevant":
       default:
-        return 0
+        return 0;
     }
-  })
+  });
+
+  // This class controls the overall layout of the cards container within PropertyGrid
+  const gridOrListClasses =
+    viewMode === "grid"
+      ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" // Mobile 1-col, Desktop Grid (Image 2)
+      : "space-y-4"; // Mobile 1-col (due to PropertyCard), Desktop List (Image 1, full width)
 
   if (!mounted || (loading && properties.length === 0)) {
+    // Skeletons need to reflect the view mode
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 h-48 rounded-t-lg"></div>
-            <div className="bg-white p-4 rounded-b-lg border border-t-0">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
-              <div className="h-8 bg-gray-200 rounded"></div>
+      <div className={gridOrListClasses}>
+        {[...Array(viewMode === "list" ? 3 : 6)].map((_, index) => (
+          <div key={index} className="animate-pulse bg-white rounded-lg shadow-md overflow-hidden">
+            {/* Skeleton structure mimics PropertyCard's internal responsiveness */}
+            <div className="flex flex-row md:block"> {/* This dictates mobile list / desktop grid for skeletons */}
+              <div className="relative w-2/5 flex-shrink-0 min-h-[120px] bg-gray-200 md:w-full md:h-48" />
+              <div className="p-4 w-3/5 space-y-2 md:w-full">
+                <div className="h-4 bg-gray-200 rounded mb-2" />
+                <div className="h-6 bg-gray-200 rounded mb-2" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+              </div>
             </div>
           </div>
         ))}
@@ -90,7 +103,7 @@ export default function PropertyGrid({
     )
   }
 
-  if (mounted && properties.length === 0 && !loading) {
+  if (mounted && properties.length === 0 && !loading && !children) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
@@ -106,7 +119,6 @@ export default function PropertyGrid({
         <div>
           <button
             type="button"
-            // Removed bg, px, py, shadow, ring, hover:bg classes
             className="inline-flex justify-center items-center gap-x-1.5 text-sm font-semibold text-gray-900"
             id="menu-button"
             aria-expanded={isDropdownOpen}
@@ -162,9 +174,11 @@ export default function PropertyGrid({
       </div>
       {/* --- */}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {sortedProperties.map((property) => (
-          <PropertyCard key={property.id} property={property} onViewDetails={onViewDetails} />
+      {/* Apply the determined grid/list classes */}
+      <div className={gridOrListClasses}>
+        {/* Render children if provided (from AgentDashboard), otherwise render PropertyCards directly */}
+        {children || sortedProperties.map((property) => (
+            <PropertyCard key={property.id} property={property} onViewDetails={onViewDetails} />
         ))}
       </div>
 
