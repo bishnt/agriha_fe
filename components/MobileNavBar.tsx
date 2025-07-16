@@ -9,7 +9,7 @@ const MobileNavBar: React.FC = () => {
   const pathname = usePathname(); // Get the current path
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex justify-center items-center sm:hidden p-3 bg-white rounded-3xl shadow-xl max-w-[90%] w-full">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex justify-center items-center sm:hidden p-3 bg-white rounded-3xl shadow-xl max-w-[90%] w-full z-30">
       <nav className="w-full">
         <ul className="flex justify-around w-full">
           {/* Home Item */}

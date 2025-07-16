@@ -13,9 +13,10 @@ interface PropertyCardProps {
   onViewDetails?: (propertyId: string) => void;
   onToggleLike?: (propertyId: string, isLiked: boolean) => void;
   isDesktopListView?: boolean; // True when desktop is in "list" mode (Image 1 style)
+  isActive?: boolean; // Indicates if the card is active/selected
 }
 
-export default function PropertyCard({ property, onViewDetails, onToggleLike, isDesktopListView = false }: PropertyCardProps) {
+export default function PropertyCard({ property, onViewDetails, onToggleLike, isDesktopListView = false, isActive = false }: PropertyCardProps) {
 
   const handleViewDetails = () => {
     onViewDetails?.(property.id.toString());
@@ -27,7 +28,7 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike, is
   };
 
   return (
-    <Card className="overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-200 rounded-lg">
+    <Card className={`overflow-hidden shadow-sm transition-all duration-200 border border-gray-200 rounded-lg ${isActive ? 'ring-2 ring-[#002B6D]' : 'hover:shadow-lg'}`}>
       {/*
         Main card inner layout:
         - Mobile: Always flex-row (image left, details right)

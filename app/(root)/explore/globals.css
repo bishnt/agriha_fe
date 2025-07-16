@@ -1,0 +1,6 @@
+/* Ensure every ancestor gets a real height */
+html,
+body,
+#__next {
+  height: 100%;
+}

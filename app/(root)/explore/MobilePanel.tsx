@@ -81,12 +81,19 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
   }
 
   return (
-    <div
-      ref={panelRef}
-      className={cn(
-        "absolute bottom-3 left-3 right-3 bg-white rounded-t-3xl shadow-2xl z-20 transition-all duration-300 border border-gray-100",
-        isDragging ? "transition-none" : "",
-      )}
+   <div
+  ref={panelRef}
+  className={cn(
+    // layout & position
+    "absolute inset-x-3 bottom-3",
+    // look & feel
+    "rounded-t-3xl border border-gray-100 bg-[#F8F8FF] shadow-2xl z-20",
+    // motion
+    "transition-all duration-300",
+    // disable transitions while dragging
+    isDragging && "transition-none",
+  )}
+
       style={{
         height: `${getPanelHeight()}px`,
         touchAction: "none",
