@@ -41,16 +41,26 @@ export default function ExploreClient() {
         </div>
       ) : (
         // Desktop layout with search section
-        <div className="h-[calc(100vh-64px)] flex flex-col">
-          {/* Search Section */}
-          <SearchSection onLocationSelect={handleLocationSelect} />
+  <div
+    className="
+      h-[calc(100vh-64px)] flex flex-col
+      mx-auto max-w-7xl px-4   /* ← margin‑auto centers, px-4 = 1rem side padding */
+    "
+  >
+    {/* Search / Filters section */}
+    <SearchSection onLocationSelect={handleLocationSelect} />
 
-          {/* Map and Property List */}
-          <div className="flex-1 grid grid-cols-[2fr_1fr]">
-            <LeafletMap selectedLocation={selectedLocation} />
-            <PropertyList />
-          </div>
-        </div>
+    {/* Map + Property list */}
+    <div className="flex-1 grid grid-cols-[2fr_1fr] gap-4">
+      {/* अब दुबै घटकमाथि wrapper‑को padding लागू हुन्छ */}
+      <LeafletMap selectedLocation={selectedLocation} />
+
+      {/* list छुट्टै scroll हुन चाहिँ overflow‑y दिइराख्नुस् */}
+      <div className="overflow-y-auto">
+        <PropertyList />
+      </div>
+    </div>
+  </div>
       )}
     </ActivePropertyProvider>
   )
