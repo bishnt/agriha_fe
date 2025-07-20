@@ -45,6 +45,7 @@
     "cmdk": "latest",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "latest",
+    "fuse.js": "^7.1.0",
     "graphql": "^16.8.1",
     "graphql-ws": "latest",
     "input-otp": "latest",

@@ -4,9 +4,117 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Search, MapPin, TrendingUp, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Location } from "@/lib/types"
+import Fuse from "fuse.js"
 
 const popularLocations: Location[] = [
-
+  {
+    id: "1",
+    name: "Thamel",
+    city: "Kathmandu",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.7172,
+    longitude: 85.3140,
+    description: "Thamel, Kathmandu",
+    propertyCount: 120,
+    type: "neighborhood"
+  },
+  {
+    id: "2",
+    name: "Durbar Marg",
+    city: "Kathmandu",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.7128,
+    longitude: 85.3166,
+    description: "Durbar Marg, Kathmandu",
+    propertyCount: 85,
+    type: "neighborhood"
+  },
+  {
+    id: "3",
+    name: "Boudhanath Stupa",
+    city: "Kathmandu",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.7218,
+    longitude: 85.3621,
+    description: "Boudhanath Stupa, Kathmandu",
+    propertyCount: 45,
+    type: "landmark"
+  },
+  {
+    id: "4",
+    name: "Patan Durbar Square",
+    city: "Lalitpur",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.6736,
+    longitude: 85.3244,
+    description: "Patan Durbar Square, Lalitpur",
+    propertyCount: 60,
+    type: "landmark"
+  },
+  {
+    id: "5",
+    name: "Swayambhunath",
+    city: "Kathmandu",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.7151,
+    longitude: 85.2906,
+    description: "Swayambhunath Temple, Kathmandu",
+    propertyCount: 30,
+    type: "landmark"
+  },
+  {
+    id: "6",
+    name: "Pashupatinath Temple",
+    city: "Kathmandu",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.7109,
+    longitude: 85.3484,
+    description: "Pashupatinath Temple, Kathmandu",
+    propertyCount: 25,
+    type: "landmark"
+  },
+  {
+    id: "7",
+    name: "New Road",
+    city: "Kathmandu",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.7068,
+    longitude: 85.3146,
+    description: "New Road, Kathmandu",
+    propertyCount: 75,
+    type: "neighborhood"
+  },
+  {
+    id: "8",
+    name: "Jawalakhel",
+    city: "Lalitpur",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.6747,
+    longitude: 85.3113,
+    description: "Jawalakhel, Lalitpur",
+    propertyCount: 50,
+    type: "neighborhood"
+  },
+  {
+    id: "9",
+    name: "Bhaktapur Durbar Square",
+    city: "Bhaktapur",
+    state: "Bagmati",
+    country: "Nepal",
+    latitude: 27.6710,
+    longitude: 85.4296,
+    description: "Bhaktapur Durbar Square, Bhaktapur",
+    propertyCount: 40,
+    type: "landmark"
+  },
 ];
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -49,10 +157,33 @@ export default function SearchBox({
   const [searchResults, setSearchResults] = useState<Location[]>([])
   const [loading, setLoading] = useState(false)
   const [showRecommendations, setShowRecommendations] = useState(false)
+  const [localLocations, setLocalLocations] = useState<Location[]>([])
   
   const debouncedSearchQuery = useDebounce(value, 500)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const fuseRef = useRef<Fuse<Location> | null>(null)
+
+  // Initialize Fuse.js with local locations
+  useEffect(() => {
+    if (localLocations.length > 0) {
+      const options = {
+        keys: [
+          'name',
+          'city',
+          'state',
+          'country',
+          'description'
+        ],
+        includeScore: true,
+        threshold: 0.4,
+        minMatchCharLength: 2,
+        ignoreLocation: true,
+        shouldSort: true,
+      }
+      fuseRef.current = new Fuse(localLocations, options)
+    }
+  }, [localLocations])
 
   const fetchNominatimData = useCallback(async (query: string) => {
     if (query.length < 3) {
@@ -82,6 +213,11 @@ export default function SearchBox({
         propertyCount: 0,
         type: item.type,
       }))
+      
+      // Update local locations for fuzzy search
+      setLocalLocations(prev => [...prev, ...formattedResults])
+      
+      // Initial results from API
       setSearchResults(formattedResults)
     } catch (error) {
       console.error("Error fetching Nominatim data:", error)
@@ -91,8 +227,14 @@ export default function SearchBox({
     }
   }, [])
 
+  // Perform fuzzy search when localLocations is populated
   useEffect(() => {
-    if (debouncedSearchQuery) {
+    if (debouncedSearchQuery && fuseRef.current) {
+      const results = fuseRef.current.search(debouncedSearchQuery)
+      const filteredResults = results.map(result => result.item)
+      setSearchResults(filteredResults)
+    } else if (debouncedSearchQuery) {
+      // Fallback to API search if no local data
       fetchNominatimData(debouncedSearchQuery)
     } else {
       setSearchResults([])
