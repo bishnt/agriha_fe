@@ -72,7 +72,7 @@ export default function RegisterPage() {
   }
 
   return (
-<div className="min-h-screen flex flex-col items-center justify-start py-8 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
+    <div className="min-h-screen h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
 <div className="w-full max-w-4xl px-1 py-2 lg:px-2 lg:py-4 flex flex-col lg:flex-row items-center justify-center gap-0 h-[70%]">
         {/* Outer rounded box */}
         <div className="w-full bg-white/90 rounded-2xl shadow-2xl border border-white/30 flex flex-col lg:flex-row overflow-hidden h-full relative">
