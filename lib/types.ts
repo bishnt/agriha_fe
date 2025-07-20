@@ -90,3 +90,37 @@ export type Location = {
   propertyCount?: number
   type?: string
 }
+
+// Filter related interfaces
+export interface FilterCriteria {
+  distanceRadius: number;
+  minPrice: number;
+  maxPrice: number;
+  bedrooms: number;
+  bathrooms: number;
+  minArea: number;
+  maxArea: number;
+  isAttached: boolean;
+  type: string[]; // Array to allow multiple types to be selected
+}
+
+// Component props interfaces
+export interface HeroSectionProps {
+  onSearch?: (query: string) => void;
+  onApplyFilters?: (filters: FilterCriteria) => void;
+  heroImage?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export interface FilterPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onApplyFilters: (filters: FilterCriteria) => void;
+  initialFilters: FilterCriteria;
+}
+
+export interface SearchSectionProps {
+  onLocationSelect: (location: Location) => void;
+  setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
+}
