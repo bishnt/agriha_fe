@@ -77,3 +77,16 @@ export interface User {
   email: string
   role: "USER" | "AGENT" | "ADMIN"
 }
+
+export type Location = {
+  id: string
+  name: string
+  city: string
+  state?: string
+  country?: string
+  latitude: number
+  longitude: number
+  description?: string
+  propertyCount?: number
+  type?: string
+}

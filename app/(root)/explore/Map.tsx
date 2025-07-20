@@ -1,4 +1,4 @@
-/* app/components/Map.tsx */
+// app/components/Map.tsx
 "use client"
 
 import { useEffect } from "react"
@@ -13,12 +13,12 @@ import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 
 import { mockProperties } from "@/lib/mockData1"
-import { Location } from "@/lib/mockLocations"
+import { Location } from "@/lib/types"
 import useActiveProperty from "./useActiveProperty"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 /* ──────────────────────────────────────────────────────────
-   Leaflet default marker images
+   Leaflet default marker images (still needed for general markers)
    ────────────────────────────────────────────────────────── */
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -29,6 +29,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 })
+
+/* ──────────────────────────────────────────────────────────
+   Custom Red Marker Icon for Selected Location
+   ────────────────────────────────────────────────────────── */
+const redIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 /* ──────────────────────────────────────────────────────────
    Helpers
@@ -98,7 +110,11 @@ const MapController = ({ loc }: { loc: Location | null }) => {
   // location selector (e.g. city dropdown)
   useEffect(() => {
     if (!loc) return
-    map.flyTo([loc.latitude, loc.longitude], mobile ? 13 : 14, { duration: 1.5 })
+    const lat = loc.latitude
+    const lon = loc.longitude
+    if (typeof lat === 'number' && typeof lon === 'number') {
+      map.flyTo([lat, lon], mobile ? 13 : 14, { duration: 1.5 })
+    }
   }, [loc, map, mobile])
 
   return null
@@ -120,65 +136,89 @@ export default function PropertyMap({ selectedLocation = null }: Props) {
   const onMarkerClick = (id: number) => setActiveId(id)
 
   return (
-    // **Key change:** h-screen guarantees a bounded height
-    <div className="w-full h-screen">
-      <MapContainer
-        center={[27.7, 85.33]} /* Kathmandu fallback */
-        zoom={mobile ? 10 : 12}
-        className="w-full h-full"
-        zoomControl
-        attributionControl={!mobile}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution={
-            mobile
-              ? ""
-              : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          }
-        />
+    <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100 p-2">
+      <div className="w-full h-full bg-white rounded-2xl shadow-lg ring-1 ring-black/5 backdrop-blur-sm border border-white/20 overflow-hidden">
+        <MapContainer
+          center={[27.7, 85.33]}
+          zoom={mobile ? 10 : 12}
+          className="w-full h-full rounded-2xl"
+          zoomControl={false} // Zoom controls are removed
+          attributionControl={!mobile}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution={
+              mobile
+                ? ""
+                : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }
+          />
 
-        <FitBounds />
-        <MapController loc={selectedLocation} />
+          <FitBounds />
+          <MapController loc={selectedLocation} />
 
-        {valid.map((p) => (
-          <Marker
-            key={p.id}
-            position={[p.latitude!, p.longitude!]}
-            icon={makeMarkerIcon(activeId === p.id, mobile)}
-            eventHandlers={{ click: () => onMarkerClick(p.id) }}
-          >
-            <Popup>
-              <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
-                <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
-                  {p.title}
-                </h3>
-                <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
-                  {p.address}
-                </p>
-                <div className="flex justify-between items-center">
-                  <span
-                    className={`font-bold text-[#002B6D] ${
-                      mobile ? "text-sm" : "text-base"
-                    }`}
-                  >
-                    ${p.price.toLocaleString()}
-                    {p.priceType !== "total" && (
-                      <span className="text-xs font-normal">
-                        /{p.priceType.replace("per ", "")}
-                      </span>
-                    )}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {p.bedrooms > 0 ? `${p.bedrooms}bd ` : ""}
-                    {p.bathrooms}ba
-                  </span>
+          {/* Marker for selectedLocation (red indicator) */}
+          {selectedLocation && (
+            <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} icon={redIcon}>
+              <Popup>
+                <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
+                  <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
+                    {selectedLocation.name}
+                  </h3>
+                  <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
+                    {selectedLocation.description || `${selectedLocation.city}, ${selectedLocation.state}`}
+                  </p>
+                  {/* Optional: Display property count if available */}
+                  {selectedLocation.propertyCount && (
+                    <span className="text-xs text-gray-500 mt-1 block">
+                      {selectedLocation.propertyCount} properties
+                    </span>
+                  )}
                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Existing markers for mockProperties */}
+          {valid.map((p) => (
+            <Marker
+              key={p.id}
+              position={[p.latitude!, p.longitude!]}
+              icon={makeMarkerIcon(activeId === p.id, mobile)}
+              eventHandlers={{ click: () => onMarkerClick(p.id) }}
+            >
+              <Popup>
+                <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
+                  <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
+                    {p.title}
+                  </h3>
+                  <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
+                    {p.address}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span
+                      className={`font-bold text-[#002B6D] ${
+                        mobile ? "text-sm" : "text-base"
+                      }`}
+                    >
+                      ${p.price.toLocaleString()}
+                      {p.priceType !== "total" && (
+                        <span className="text-xs font-normal">
+                          /{p.priceType.replace("per ", "")}
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {p.bedrooms > 0 ? `${p.bedrooms}bd ` : ""}
+                      {p.bathrooms}ba
+                    </span>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   )
 }
