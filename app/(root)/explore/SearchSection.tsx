@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Search, SlidersHorizontal, MapPin, TrendingUp, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -53,16 +53,16 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
   const [searchResults, setSearchResults] = useState<Location[]>([])
   const [loading, setLoading] = useState(false)
   const [showRecommendations, setShowRecommendations] = useState(false)
-  const [activePropertyType, setActivePropertyType] = useState<"for_sale" | "for_rent" | null>(null);
-  const [showFilterPopup, setShowFilterPopup] = useState(false);
+  const [activePropertyType, setActivePropertyType] = useState<"for_sale" | "for_rent" | null>(null)
+  const [showFilterPopup, setShowFilterPopup] = useState(false)
   
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams()
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const shouldKeepFocus = useRef(false)
 
-  // Initial filter state
   const initialFilterState: FilterCriteria = {
     distanceRadius: 0,
     minPrice: 0,
@@ -73,106 +73,118 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
     maxArea: 1000,
     isAttached: false,
     type: [],
-  };
+  }
 
   // Set search query from URL params on mount
   useEffect(() => {
-    const searchParam = searchParams.get('search');
+    const searchParam = searchParams.get('search')
     if (searchParam) {
-      setSearchQuery(searchParam);
+      setSearchQuery(searchParam)
     }
-  }, [searchParams]);
+  }, [searchParams])
+
+  const fetchNominatimData = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setSearchResults([])
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    try {
+      const nominatimApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          query
+        )}&format=json&limit=10&addressdetails=1&viewbox=85.25,27.65,85.45,27.75&bounded=1&countrycodes=np`
+
+      const response = await fetch(nominatimApiUrl)
+      const data = await response.json()
+
+      const formattedResults: Location[] = data.map((item: any) => ({
+        id: item.osm_id.toString(),
+        name: item.name || item.display_name.split(',')[0],
+        city: item.address.city || item.address.town || item.address.village || '',
+        state: item.address.state || '',
+        country: item.address.country || '',
+        latitude: parseFloat(item.lat),
+        longitude: parseFloat(item.lon),
+        description: item.display_name,
+        propertyCount: 0,
+        type: item.type,
+      }))
+      setSearchResults(formattedResults)
+    } catch (error) {
+      console.error("Error fetching Nominatim data:", error)
+      setSearchResults([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const fetchNominatimData = async () => {
-      if (debouncedSearchQuery.length < 3) {
-        setSearchResults([])
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      try {
-        const nominatimApiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            debouncedSearchQuery,
-          )}&format=json&limit=10&addressdetails=1&viewbox=85.25,27.65,85.45,27.75&bounded=1&countrycodes=np`;
-
-        const response = await fetch(nominatimApiUrl);
-        const data = await response.json();
-
-        const formattedResults: Location[] = data.map((item: any) => ({
-          id: item.osm_id.toString(),
-          name: item.name || item.display_name.split(',')[0],
-          city: item.address.city || item.address.town || item.address.village || '',
-          state: item.address.state || '',
-          country: item.address.country || '',
-          latitude: parseFloat(item.lat),
-          longitude: parseFloat(item.lon),
-          description: item.display_name,
-          propertyCount: 0,
-          type: item.type,
-        }));
-        setSearchResults(formattedResults);
-      } catch (error) {
-        console.error("Error fetching Nominatim data:", error);
-        setSearchResults([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (debouncedSearchQuery) {
-      fetchNominatimData();
+      fetchNominatimData(debouncedSearchQuery)
     } else {
-      setSearchResults([]);
+      setSearchResults([])
     }
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, fetchNominatimData])
 
-  const handleLocationClick = async (location: Location) => {
+  useEffect(() => {
+    if (shouldKeepFocus.current && searchInputRef.current) {
+      searchInputRef.current.focus()
+      shouldKeepFocus.current = false
+    }
+  }, [searchQuery])
+
+  const handleLocationClick = useCallback(async (location: Location) => {
     onLocationSelect(location)
     setSearchQuery(location.description || `${location.name}, ${location.city}`)
     setShowRecommendations(false)
 
     // Simulated backend response
     const simulatedProperties = mockProperties.filter(p => {
-      if (p.latitude === null || p.longitude === null) return false;
+      if (p.latitude === null || p.longitude === null) return false
       const distance = Math.sqrt(
         Math.pow(p.latitude - location.latitude, 2) +
         Math.pow(p.longitude - location.longitude, 2)
-      );
-      return distance < 0.1;
-    });
-    setProperties(simulatedProperties.length > 0 ? simulatedProperties : []);
-  }
+      )
+      return distance < 0.1
+    })
+    setProperties(simulatedProperties.length > 0 ? simulatedProperties : [])
+  }, [onLocationSelect, setProperties])
 
-  const handleSearchFocus = () => {
+  const handleSearchFocus = useCallback(() => {
     setShowRecommendations(true)
-  }
+  }, [])
 
-  const handleSearchBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleSearchBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     if (resultsRef.current && !resultsRef.current.contains(e.relatedTarget as Node)) {
-      setTimeout(() => setShowRecommendations(false), 100);
+      setTimeout(() => setShowRecommendations(false), 100)
     }
-  }
+  }, [])
 
-  const handleResultMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-  }
+  const handleResultMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+  }, [])
 
-  const handlePropertyTypeFilter = (type: "for_sale" | "for_rent") => {
-    setActivePropertyType(prevType => prevType === type ? null : type);
-  }
+  const handlePropertyTypeFilter = useCallback((type: "for_sale" | "for_rent") => {
+    setActivePropertyType(prevType => prevType === type ? null : type)
+  }, [])
 
-  const handleFilterClick = (filterName: string) => {
-    console.log(`Filter "${filterName}" clicked`);
-    setShowFilterPopup(true);
-  }
+  const handleFilterClick = useCallback((filterName: string) => {
+    console.log(`Filter "${filterName}" clicked`)
+    setShowFilterPopup(true)
+  }, [])
 
-  const handleApplyFilters = (filters: FilterCriteria) => {
-    console.log("Applying filters:", filters);
-    setShowFilterPopup(false);
-    // Here you would apply the filters to your properties
-  };
+  const handleApplyFilters = useCallback((filters: FilterCriteria) => {
+    console.log("Applying filters:", filters)
+    setShowFilterPopup(false)
+  }, [])
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    shouldKeepFocus.current = true
+    setSearchQuery(e.target.value)
+    setShowRecommendations(true)
+  }, [])
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 mx-auto max-w-[calc(100%-32px)] md:max-w-7xl relative z-[1000] mt-4">
@@ -183,10 +195,7 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
             ref={searchInputRef}
             placeholder="Search by city, neighborhood, or landmark..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value)
-              setShowRecommendations(true)
-            }}
+            onChange={handleSearchChange}
             onFocus={handleSearchFocus}
             onBlur={handleSearchBlur}
             className="pl-9 h-10 bg-gray-50 border-2 border-[#002B6D] rounded-xl text-sm w-full
@@ -196,6 +205,7 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
             <div
               ref={resultsRef}
               className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg z-[1001] max-h-80 overflow-y-auto"
+              onMouseDown={handleResultMouseDown}
             >
               {searchQuery === "" ? (
                 <div className="p-4">
@@ -208,7 +218,6 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
                       key={location.id}
                       className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
                       onClick={() => handleLocationClick(location)}
-                      onMouseDown={handleResultMouseDown}
                     >
                       <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1 mr-2" />
                       <div>
@@ -238,7 +247,6 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
                     key={location.id}
                     className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
                     onClick={() => handleLocationClick(location)}
-                    onMouseDown={handleResultMouseDown}
                   >
                     <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1 mr-2" />
                     <div>
@@ -318,7 +326,6 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
         </Button>
       </div>
 
-      {/* Filter Popup */}
       <FilterPopup
         isOpen={showFilterPopup}
         onClose={() => setShowFilterPopup(false)}
