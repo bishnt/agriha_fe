@@ -69,7 +69,7 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
     <div
       ref={panelRef}
       className={cn(
-        "fixed left-0 right-0 bottom-0 mx-3 z-50 rounded-t-3xl border border-gray-100 bg-[#F8F8FF] shadow-2xl",
+        "fixed left-0 right-0 bottom-0 mx-3 z-20 rounded-t-3xl border border-gray-100 bg-[#F8F8FF] shadow-2xl",
         "transition-all duration-300",
         isDragging && "transition-none"
       )}
