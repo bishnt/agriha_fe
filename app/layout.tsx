@@ -6,7 +6,7 @@ import ClientLayout from "@/components/ClientLayout";
 
 export const metadata = {
   title: "AGRIHA ‑ Find Homes, Far From Home",
-  description: "Real‑estate platform for finding rental properties",
+  description: "",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

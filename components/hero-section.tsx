@@ -68,7 +68,7 @@ export default function HeroSection({
               onChange={setSearchQuery}
               onLocationSelect={handleLocationSelect}
               variant="sticky"
-              placeholder="Search locations..."
+              placeholder="       Search locations..."
             />
           </div>
           <Button
@@ -77,7 +77,7 @@ export default function HeroSection({
             className="bg-white text-gray-500 hover:bg-gray-100 rounded-lg px-3 py-1 text-sm font-semibold flex items-center gap-1 shadow"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Filter
           </Button>
@@ -87,13 +87,13 @@ export default function HeroSection({
       {/* Desktop Sticky Navbar */}
 <nav className={`hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-white shadow-md py-3 transition-all duration-300 ${isScrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center w-full">
-    <div className="flex-grow max-w-2xl mr-4">
+    <div className="flex-grow max-w-2xl mr-4 lg:px-4">
       <SearchBox
         value={searchQuery}
         onChange={setSearchQuery}
         onLocationSelect={handleLocationSelect}
         variant="sticky"
-        placeholder="Search locations..."
+        placeholder="       Search locations, city, neighborhood..."
         className="w-full"  // Ensure SearchBox takes full width
       />
     </div>
@@ -103,7 +103,7 @@ export default function HeroSection({
       className="bg-white text-gray-500 hover:bg-gray-100 rounded-lg px-4 py-2 text-sm font-semibold flex items-center gap-2 shadow whitespace-nowrap"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M4 6H20M7 12H17M10 18H14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       Filter
     </Button>

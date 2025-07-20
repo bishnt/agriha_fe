@@ -277,7 +277,7 @@ export default function SearchBox({
     },
     hero: {
       container: "relative w-full",
-      input: "h-12 pl-4 pr-4 text-base border-0 rounded-lg focus:ring-2 focus:ring-[#002B6D] focus:border-transparent bg-transparent placeholder:text-gray-500 shadow-none",
+      input: "h-12 pl-10 pr-4 text-base border-0 rounded-lg focus:ring-2 focus:ring-[#002B6D] focus:border-transparent bg-transparent placeholder:text-gray-500 shadow-none",
       results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg max-h-80 overflow-y-auto z-[1001] mt-1"
     },
     sticky: {
