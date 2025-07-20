@@ -6,26 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Location } from "@/lib/types"
 
 const popularLocations: Location[] = [
-  {
-    id: "thamel-1", name: "Thamel", city: "Kathmandu", state: "Bagmati", country: "Nepal",
-    latitude: 27.7155, longitude: 85.3113, description: "Tourist hub with boutique hotels & nightlife",
-    propertyCount: 240, type: "Neighborhood"
-  },
-  {
-    id: "bouddha-1", name: "Boudhanath", city: "Kathmandu", state: "Bagmati", country: "Nepal",
-    latitude: 27.7198, longitude: 85.3629, description: "Peaceful area surrounding Boudhanath Stupa",
-    propertyCount: 180, type: "Landmark"
-  },
-  {
-    id: "pulchowk-1", name: "Pulchowk", city: "Lalitpur", state: "Bagmati", country: "Nepal",
-    latitude: 27.675, longitude: 85.317, description: "Lalitpur's commercial & educational center",
-    propertyCount: 95, type: "Neighborhood"
-  },
-  {
-    id: "pashupati-1", name: "Pashupatinath Temple", city: "Kathmandu", state: "Bagmati", country: "Nepal",
-    latitude: 27.7107, longitude: 85.3475, description: "Historic Hindu temple complex",
-    propertyCount: 50, type: "Landmark"
-  },
+
 ];
 
 function useDebounce<T>(value: T, delay: number): T {

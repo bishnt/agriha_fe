@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSearchParams } from "next/navigation"
 import FilterPopup from "@/components/filters"
-import { Location, Property, SearchSectionProps, FilterCriteria } from "@/lib/types"
-import { mockProperties } from "@/lib/mockData1"
+import { Location, SearchSectionProps, FilterCriteria } from "@/lib/types"
 
 const popularLocations: Location[] = [
   {
@@ -48,7 +47,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-export default function SearchSection({ onLocationSelect, setProperties }: SearchSectionProps) {
+export default function SearchSection({ onLocationSelect }: SearchSectionProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Location[]>([])
   const [loading, setLoading] = useState(false)
@@ -75,11 +74,12 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
     type: [],
   }
 
-  // Set search query from URL params on mount
+  // Set search query from URL params on mount and trigger search
   useEffect(() => {
     const searchParam = searchParams.get('search')
     if (searchParam) {
       setSearchQuery(searchParam)
+      fetchNominatimData(searchParam)
     }
   }, [searchParams])
 
@@ -111,22 +111,28 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
         propertyCount: 0,
         type: item.type,
       }))
+      
       setSearchResults(formattedResults)
+      
+      // Automatically select the first result if this is from URL param
+      if (formattedResults.length > 0 && searchParams.get('search')) {
+        handleLocationClick(formattedResults[0])
+      }
     } catch (error) {
       console.error("Error fetching Nominatim data:", error)
       setSearchResults([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [searchParams])
 
   useEffect(() => {
-    if (debouncedSearchQuery) {
+    if (debouncedSearchQuery && !searchParams.get('search')) {
       fetchNominatimData(debouncedSearchQuery)
-    } else {
+    } else if (!debouncedSearchQuery) {
       setSearchResults([])
     }
-  }, [debouncedSearchQuery, fetchNominatimData])
+  }, [debouncedSearchQuery, fetchNominatimData, searchParams])
 
   useEffect(() => {
     if (shouldKeepFocus.current && searchInputRef.current) {
@@ -135,22 +141,11 @@ export default function SearchSection({ onLocationSelect, setProperties }: Searc
     }
   }, [searchQuery])
 
-  const handleLocationClick = useCallback(async (location: Location) => {
+  const handleLocationClick = useCallback((location: Location) => {
     onLocationSelect(location)
     setSearchQuery(location.description || `${location.name}, ${location.city}`)
     setShowRecommendations(false)
-
-    // Simulated backend response
-    const simulatedProperties = mockProperties.filter(p => {
-      if (p.latitude === null || p.longitude === null) return false
-      const distance = Math.sqrt(
-        Math.pow(p.latitude - location.latitude, 2) +
-        Math.pow(p.longitude - location.longitude, 2)
-      )
-      return distance < 0.1
-    })
-    setProperties(simulatedProperties.length > 0 ? simulatedProperties : [])
-  }, [onLocationSelect, setProperties])
+  }, [onLocationSelect])
 
   const handleSearchFocus = useCallback(() => {
     setShowRecommendations(true)
