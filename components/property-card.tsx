@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Bed, Bath, Square, Home, Heart } from "lucide-react"
 import type { Property } from "@/lib/types"
 
-interface PropertyCardProps {
+export interface PropertyCardProps {
   property: Property;
   onViewDetails?: (propertyId: string) => void;
   onToggleLike?: (propertyId: string, isLiked: boolean) => void;

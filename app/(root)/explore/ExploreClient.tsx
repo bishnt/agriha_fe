@@ -10,12 +10,10 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { mockProperties } from "@/lib/mockData1"
 import { Location, Property } from "@/lib/types"
 
-// Define MapProps locally to match your Map component
 interface MapProps {
   selectedLocation?: Location | null
 }
 
-// Explicitly type the dynamic import for Map
 const PropertyMap = dynamic<MapProps>(() => import("./Map").then(mod => mod.default), { ssr: false });
 
 export default function ExploreClient() {
@@ -35,34 +33,36 @@ export default function ExploreClient() {
   return (
     <ActivePropertyProvider>
       {isMobile ? (
-        <div className="relative h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-          <div className="absolute inset-4 z-0 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5">
+        <div className="relative h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="absolute inset-0 z-0">
             <PropertyMap selectedLocation={selectedLocation} />
           </div>
+          
           <MobilePanel isOpen={isPanelOpen} setIsOpen={setIsPanelOpen}>
-            <PropertyList />
+            <div className="h-full flex flex-col">
+              <PropertyList />
+            </div>
           </MobilePanel>
         </div>
       ) : (
         <div className="flex flex-col h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 to-slate-100">
-          {/* Modern rounded SearchSection */}
+          {/* Search section */}
           <div className="p-4 pb-2">
-            
-              <SearchSectionComponent 
-                onLocationSelect={handleLocationSelect} 
-                setProperties={setProperties} 
-              />
-            
+            <SearchSectionComponent 
+              onLocationSelect={handleLocationSelect} 
+              setProperties={setProperties} 
+            />
           </div>
           
-          <div className="flex-1 flex px-4 gap-4">
-            {/* Map container with modern styling */}
-            <div className="w-[65%] h-full">
+          {/* Main content area - changed width ratios here */}
+          <div className="flex-1 flex overflow-hidden px-4 pb-4 gap-4">
+            {/* Map container - now 60% width */}
+            <div className="w-[60%] h-full rounded-2xl overflow-hidden shadow-lg">
               <PropertyMap selectedLocation={selectedLocation} />
             </div>
             
-            {/* PropertyList container with modern styling */}
-            <div className="flex-1 h-full">
+            {/* PropertyList container - now 40% width */}
+            <div className="w-[40%] h-full overflow-hidden">
               <PropertyList />
             </div>
           </div>
