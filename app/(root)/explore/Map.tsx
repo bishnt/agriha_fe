@@ -13,9 +13,10 @@ import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 
 import { mockProperties } from "@/lib/mockData1"
-import { Location } from "@/lib/types"
+import { Location, Property } from "@/lib/types"
 import useActiveProperty from "./useActiveProperty"
 import { useIsMobile } from "@/hooks/use-mobile"
+import PropertyCard from "@/components/PropertyCard" // Adjust import path as needed
 
 /* ──────────────────────────────────────────────────────────
    Leaflet default marker images (still needed for general markers)
@@ -40,7 +41,24 @@ const redIcon = new L.Icon({
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41]
-});
+})
+
+/* ──────────────────────────────────────────────────────────
+   Custom Popup Component with PropertyCard
+   ────────────────────────────────────────────────────────── */
+const CustomPopup = ({ property, mobile }: { property: Property; mobile: boolean }) => {
+  return (
+    <div className={`bg-transparent border-none ${mobile ? "w-[280px]" : "w-[320px]"}`}>
+      <div className="p-1">
+        <PropertyCard 
+          property={property} 
+          onViewDetails={(id) => console.log("View details:", id)}
+          onToggleLike={(id, isLiked) => console.log("Toggle like:", id, isLiked)}
+        />
+      </div>
+    </div>
+  )
+}
 
 /* ──────────────────────────────────────────────────────────
    Helpers
@@ -81,7 +99,6 @@ const FitBounds = () => {
 
     if (coords.length) {
       map.fitBounds(L.latLngBounds(coords), {
-        // padding: mobile ? [20, 20, 200, 20] : [40, 40, 40, 40],
         maxZoom: mobile ? 12 : 14,
       })
     }
@@ -142,7 +159,7 @@ export default function PropertyMap({ selectedLocation = null }: Props) {
           center={[27.7, 85.33]}
           zoom={mobile ? 10 : 12}
           className="w-full h-full rounded-2xl"
-          zoomControl={false} // Zoom controls are removed
+          zoomControl={false}
           attributionControl={!mobile}
         >
           <TileLayer
@@ -159,22 +176,35 @@ export default function PropertyMap({ selectedLocation = null }: Props) {
 
           {/* Marker for selectedLocation (red indicator) */}
           {selectedLocation && (
-            <Marker position={[selectedLocation.latitude, selectedLocation.longitude]} icon={redIcon}>
-              <Popup>
-                <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
-                  <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
-                    {selectedLocation.name}
-                  </h3>
-                  <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
-                    {selectedLocation.description || `${selectedLocation.city}, ${selectedLocation.state}`}
-                  </p>
-                  {/* Optional: Display property count if available */}
-                  {selectedLocation.propertyCount && (
-                    <span className="text-xs text-gray-500 mt-1 block">
-                      {selectedLocation.propertyCount} properties
-                    </span>
-                  )}
-                </div>
+            <Marker 
+              position={[selectedLocation.latitude, selectedLocation.longitude]} 
+              icon={redIcon}
+            >
+              <Popup maxWidth={mobile ? 300 : 350} minWidth={mobile ? 280 : 320}>
+                {(() => {
+                  const property = mockProperties.find(p => 
+                    p.latitude === selectedLocation.latitude && 
+                    p.longitude === selectedLocation.longitude
+                  )
+                  
+                  return property ? (
+                    <CustomPopup property={property} mobile={mobile} />
+                  ) : (
+                    <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
+                      <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
+                        {selectedLocation.name}
+                      </h3>
+                      <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
+                        {selectedLocation.description || `${selectedLocation.city}, ${selectedLocation.state}`}
+                      </p>
+                      {selectedLocation.propertyCount && (
+                        <span className="text-xs text-gray-500 mt-1 block">
+                          {selectedLocation.propertyCount} properties
+                        </span>
+                      )}
+                    </div>
+                  )
+                })()}
               </Popup>
             </Marker>
           )}
@@ -187,33 +217,8 @@ export default function PropertyMap({ selectedLocation = null }: Props) {
               icon={makeMarkerIcon(activeId === p.id, mobile)}
               eventHandlers={{ click: () => onMarkerClick(p.id) }}
             >
-              <Popup>
-                <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
-                  <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
-                    {p.title}
-                  </h3>
-                  <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
-                    {p.address}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span
-                      className={`font-bold text-[#002B6D] ${
-                        mobile ? "text-sm" : "text-base"
-                      }`}
-                    >
-                      ${p.price.toLocaleString()}
-                      {p.priceType !== "total" && (
-                        <span className="text-xs font-normal">
-                          /{p.priceType.replace("per ", "")}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {p.bedrooms > 0 ? `${p.bedrooms}bd ` : ""}
-                      {p.bathrooms}ba
-                    </span>
-                  </div>
-                </div>
+              <Popup maxWidth={mobile ? 300 : 350} minWidth={mobile ? 280 : 320}>
+                <CustomPopup property={p} mobile={mobile} />
               </Popup>
             </Marker>
           ))}
