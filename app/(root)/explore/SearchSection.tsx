@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Search, SlidersHorizontal, MapPin, TrendingUp, Loader2 } from "lucide-react"
+import { Search, SlidersHorizontal, MapPin, TrendingUp, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSearchParams } from "next/navigation"
@@ -182,144 +182,150 @@ export default function SearchSection({ onLocationSelect }: SearchSectionProps) 
   }, [])
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 mx-auto max-w-[calc(100%-32px)] md:max-w-7xl relative z-[1000] mt-4">
-      <div className="flex items-center justify-center gap-2">
-        <div className="relative flex-[2]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            ref={searchInputRef}
-            placeholder="Search by city, neighborhood, or landmark..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onFocus={handleSearchFocus}
-            onBlur={handleSearchBlur}
-            className="pl-9 h-10 bg-gray-50 border-2 border-[#002B6D] rounded-xl text-sm w-full
-                       focus:ring-1 focus:ring-[#002B6D] transition-all duration-200"
-          />
-          {showRecommendations && (searchQuery.length >= 3 || searchResults.length > 0 || searchQuery === "") && (
-            <div
-              ref={resultsRef}
-              className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg z-[1001] max-h-80 overflow-y-auto"
-              onMouseDown={handleResultMouseDown}
-            >
-              {searchQuery === "" ? (
-                <div className="p-4">
-                  <div className="flex items-center gap-2 text-gray-700 font-medium text-sm mb-3">
-                    <TrendingUp className="h-4 w-4" />
-                    Popular Locations
-                  </div>
-                  {popularLocations.map((location) => (
-                    <div
-                      key={location.id}
-                      className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
-                      onClick={() => handleLocationClick(location)}
-                    >
-                      <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1 mr-2" />
-                      <div>
-                        <h4 className="font-medium text-gray-800 text-sm leading-tight">
-                          {location.name}
-                        </h4>
-                        <p className="text-xs text-gray-600 leading-tight">
-                          {location.description || `${location.city}, ${location.city}`}
-                        </p>
-                        {location.propertyCount && (
-                          <span className="text-xs text-gray-500 mt-1 block">
-                            {location.propertyCount} properties
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : loading ? (
-                <div className="flex items-center justify-center p-4 text-gray-500">
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  Searching...
-                </div>
-              ) : searchResults.length > 0 ? (
-                searchResults.map((location) => (
-                  <div
-                    key={location.id}
-                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
-                    onClick={() => handleLocationClick(location)}
-                  >
-                    <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1 mr-2" />
-                    <div>
-                      <h4 className="font-medium text-gray-800 text-sm leading-tight">
-                        {location.name}
-                      </h4>
-                      <p className="text-xs text-gray-600 leading-tight">
-                        {location.description}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                searchQuery.length >= 3 && (
-                  <div className="p-4 text-gray-500 text-sm">
-                    No results found for "{searchQuery}"
-                  </div>
-                )
-              )}
-            </div>
-          )}
-        </div>
+   <div className="bg-white rounded-xl shadow-lg p-4 mb-4 w-full mx-auto relative z-[1000]">
+  {/* Search Input - Full width on mobile */}
+  <div className="relative w-full mb-3">
+    <div className="relative">
+      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+      <Input
+        ref={searchInputRef}
+        placeholder="Search location..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        onFocus={handleSearchFocus}
+        onBlur={handleSearchBlur}
+        className="pl-9 h-10 bg-gray-50 border-2 border-[#002B6D] rounded-lg text-sm w-full"
+      />
+      {searchQuery && (
+        <X 
+          className="absolute right-3 top-3 h-4 w-4 text-gray-500 cursor-pointer"
+          onClick={() => setSearchQuery("")}
+        />
+      )}
+    </div>
 
-        <Button
-          variant={activePropertyType === "for_sale" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handlePropertyTypeFilter("for_sale")}
-          className={`h-9 rounded-full text-sm flex-shrink-0 px-4 transition-colors duration-200 border-2
-                      ${activePropertyType === "for_sale" ? "bg-[#002B6D] text-white border-[#002B6D]" : "bg-white border-gray-200 text-gray-700 hover:border-[#002B6D] hover:text-[#002B6D]"}`}
-        >
-          For Sale
-        </Button>
-        <Button
-          variant={activePropertyType === "for_rent" ? "default" : "outline"}
-          size="sm"
-          onClick={() => handlePropertyTypeFilter("for_rent")}
-          className={`h-9 rounded-full text-sm flex-shrink-0 px-4 transition-colors duration-200 border-2
-                      ${activePropertyType === "for_rent" ? "bg-[#002B6D] text-white border-[#002B6D]" : "bg-white border-gray-200 text-gray-700 hover:border-[#002B6D] hover:text-[#002B6D]"}`}
-        >
-          For Rent
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleFilterClick("Price Range")}
-          className="flex-shrink-0 h-9 rounded-full bg-white border-2 border-gray-200 text-gray-700
-                     hover:border-[#002B6D] hover:text-[#002B6D] transition-colors duration-200 px-4"
-        >
-          Price Range
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleFilterClick("Beds & Baths")}
-          className="flex-shrink-0 h-9 rounded-full bg-white border-2 border-gray-200 text-gray-700
-                     hover:border-[#002B6D] hover:text-[#002B6D] transition-colors duration-200 px-4"
-        >
-          Beds & Baths
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleFilterClick("Home Type")}
-          className="flex-shrink-0 h-9 rounded-full bg-white border-2 border-gray-200 text-gray-700
-                     hover:border-[#002B6D] hover:text-[#002B6D] transition-colors duration-200 px-4"
-        >
-          Home Type
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => setShowFilterPopup(true)}
-          className="h-10 px-4 bg-white border-2 border-gray-200 rounded-xl flex-shrink-0 text-gray-700
-                     hover:border-[#002B6D] hover:text-[#002B6D] transition-colors duration-200"
-        >
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          Filters
-        </Button>
+    {/* Search Results Dropdown */}
+    {showRecommendations && (
+      <div
+        ref={resultsRef}
+        className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[1001] max-h-[60vh] overflow-y-auto"
+      >
+        {searchQuery === "" ? (
+          <div className="p-3">
+            <div className="flex items-center gap-2 text-gray-700 font-medium text-sm mb-2">
+              <TrendingUp className="h-4 w-4" />
+              Popular Locations
+            </div>
+            {popularLocations.map((location) => (
+              <div
+                key={location.id}
+                className="p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
+                onClick={() => handleLocationClick(location)}
+              >
+                <MapPin className="h-4 w-4 text-gray-400 mt-1 mr-2 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h4 className="font-medium text-gray-800 text-sm truncate">
+                    {location.name}
+                  </h4>
+                  <p className="text-xs text-gray-600 truncate">
+                    {location.description || `${location.city}`}
+                  </p>
+                  {location.propertyCount && (
+                    <span className="text-xs text-gray-500">
+                      {location.propertyCount} properties
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : loading ? (
+          <div className="flex items-center justify-center p-3 text-gray-500">
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Searching...
+          </div>
+        ) : searchResults.length > 0 ? (
+          searchResults.map((location) => (
+            <div
+              key={location.id}
+              className="p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
+              onClick={() => handleLocationClick(location)}
+            >
+              <MapPin className="h-4 w-4 text-gray-400 mt-1 mr-2 flex-shrink-0" />
+              <div className="min-w-0">
+                <h4 className="font-medium text-gray-800 text-sm truncate">
+                  {location.name}
+                </h4>
+                <p className="text-xs text-gray-600 truncate">
+                  {location.description}
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          searchQuery.length >= 3 && (
+            <div className="p-3 text-gray-500 text-sm">
+              No results for "{searchQuery}"
+            </div>
+          )
+        )}
       </div>
+    )}
+  </div>
+
+  {/* Filter Buttons - Horizontal scroll on mobile */}
+  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+    <Button
+      variant={activePropertyType === "for_sale" ? "default" : "outline"}
+      size="sm"
+      onClick={() => handlePropertyTypeFilter("for_sale")}
+      className="min-w-[80px] rounded-full text-xs h-8 border-2"
+    >
+      For Sale
+    </Button>
+    <Button
+      variant={activePropertyType === "for_rent" ? "default" : "outline"}
+      size="sm"
+      onClick={() => handlePropertyTypeFilter("for_rent")}
+      className="min-w-[80px] rounded-full text-xs h-8 border-2"
+    >
+      For Rent
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleFilterClick("Price Range")}
+      className="min-w-[70px] rounded-full text-xs h-8 border-2"
+    >
+      Price
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleFilterClick("Beds & Baths")}
+      className="min-w-[60px] rounded-full text-xs h-8 border-2"
+    >
+      Beds
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleFilterClick("Home Type")}
+      className="min-w-[60px] rounded-full text-xs h-8 border-2"
+    >
+      Type
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setShowFilterPopup(true)}
+      className="min-w-[70px] rounded-full text-xs h-8 border-2 flex items-center gap-1"
+    >
+      <SlidersHorizontal className="h-3 w-3" />
+      More
+    </Button>
+  </div>
+
 
       <FilterPopup
         isOpen={showFilterPopup}

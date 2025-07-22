@@ -6,6 +6,8 @@ import { ChevronUp, Search, SlidersHorizontal, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import SearchSection from "./SearchSection"
+import { Location, Property } from "@/lib/types"
 
 interface MobilePanelProps {
   children: React.ReactNode
@@ -19,6 +21,8 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
   const [currentY, setCurrentY] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [windowHeight, setWindowHeight] = useState(0)
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [properties, setProperties] = useState<Property[]>([]); 
 
   useEffect(() => {
     setWindowHeight(window.innerHeight)
@@ -65,6 +69,12 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
 
   const togglePanel = () => setIsOpen(!isOpen)
 
+  const handleLocationSelect = (location: Location) => {
+  setSelectedLocation(location);
+  // additional logic here like fetching properties for this location
+  console.log("Selected location:", location);
+};
+
   return (
     <div
       ref={panelRef}
@@ -98,37 +108,9 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
           </Button>
         </div>
 
-        {/* Search Row */}
-        <div className="flex gap-2 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search by city, neighborhood..."
-              className="pl-9 bg-gray-50 border-gray-200 h-10 rounded-xl"
-            />
-          </div>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-gray-200 rounded-xl">
-            <SlidersHorizontal className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-gray-200 rounded-xl">
-            <MapPin className="h-4 w-4" />
-          </Button>
-        </div>
+        <SearchSection onLocationSelect={handleLocationSelect} setProperties={setProperties} />
+</div>
 
-        {/* Filter Pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {["For Sale", "For Rent", "Price", "Beds & Baths", "Home Type", "More Filters"].map(label => (
-            <Button
-              key={label}
-              variant="outline"
-              size="sm"
-              className="flex-shrink-0 h-8 rounded-full bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
 
       {/* Scrollable content */}
       <div className="overflow-y-auto px-1" style={{ maxHeight: `${getPanelHeight() - 200}px` }}>
