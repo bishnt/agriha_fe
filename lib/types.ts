@@ -10,6 +10,7 @@ export interface Property {
   priceType: string; // e.g., "per month" (added)
   type: string; // e.g., "Room", "Apartment", "House" (added)
 
+
   isForRent: boolean;
   isForSale: boolean;
   bedrooms: number;
@@ -18,6 +19,7 @@ export interface Property {
   kitchen: number;
   floor: number;
   furnishing?: string;
+  ammenities?: string[]; // e.g., ["WiFi", "AC", "Parking"] (added)
   area?: number;
   areaUnit?: string; // e.g., "m2", "sqft" (added)
   city: string;
@@ -60,7 +62,14 @@ export interface PropertyFormData {
   status: string;
   isActive: boolean;
   isFeatured: boolean;
+  photos: File[]; // Array of files for multiple images
+  amenities: string[];
 }
+
+export type PropertyImagePreview = {
+  url: string;
+  file: File;
+};
 
 export interface SearchFilters {
   location?: string
