@@ -19,7 +19,7 @@ export interface Property {
   kitchen: number;
   floor: number;
   furnishing?: string;
-  ammenities?: string[]; // e.g., ["WiFi", "AC", "Parking"] (added)
+  ammenities: string[]; // e.g., ["WiFi", "AC", "Parking"] (added)
   area?: number;
   areaUnit?: string; // e.g., "m2", "sqft" (added)
   city: string;
@@ -64,6 +64,7 @@ export interface PropertyFormData {
   isFeatured: boolean;
   photos: File[]; // Array of files for multiple images
   amenities: string[];
+  photoPreviews?: string[]; // Array of image URLs for previews
 }
 
 export type PropertyImagePreview = {
