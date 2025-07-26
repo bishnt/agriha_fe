@@ -38,6 +38,7 @@ export const mockProperties = [
     views: 0,
     createdAt: new Date("2024‑01‑10"),
     updatedAt: new Date("2024‑02‑01"),
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "CCTV", "Elevator", "Water Supply", "Backup Electricity"],
     imageUrl:
       "https://images.pexels.com/photos/5575832/pexels-photo-5575832.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -77,6 +78,7 @@ export const mockProperties = [
     views: 0,
     createdAt: new Date("2024‑02‑07"),
     updatedAt: new Date("2024‑02‑20"),
+    ammenities: ["WiFi", "Parking", "Garden", "Balcony", "Kitchen Appliances", "TV", "Heating"],
     imageUrl:
       "https://images.pexels.com/photos/3352873/pexels-photo-3352873.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -116,6 +118,7 @@ export const mockProperties = [
     views: 0,
     createdAt: new Date("2024‑01‑25"),
     updatedAt: new Date("2024‑02‑05"),
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "CCTV", "Elevator", "Water Supply", "Backup Electricity", "Internet"],
     imageUrl:
       "https://images.pexels.com/photos/31928624/pexels-photo-31928624.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -155,6 +158,7 @@ export const mockProperties = [
     views: 0,
     createdAt: new Date("2024‑02‑02"),
     updatedAt: new Date("2024‑02‑10"),
+    ammenities: ["WiFi", "Kitchen Appliances", "TV", "Heating", "Internet"],
     imageUrl:
       "https://images.pexels.com/photos/15040569/pexels-photo-15040569.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -824,6 +828,7 @@ export const mockProperties = [
 
     createdAt: new Date("2024-01-15"),
     updatedAt: new Date("2024-01-20"),
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "CCTV", "Elevator", "Water Supply", "Backup Electricity"],
     imageUrl:
       "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -867,6 +872,7 @@ export const mockProperties = [
 
     createdAt: new Date("2024-01-10"),
     updatedAt: new Date("2024-01-18"),
+    ammenities: ["WiFi", "Parking", "Garden", "Balcony", "Kitchen Appliances", "TV", "Heating"],
     imageUrl:
       "https://images.pexels.com/photos/1396132/pexels-photo-1396132.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -910,6 +916,7 @@ export const mockProperties = [
 
     createdAt: new Date("2024-01-12"),
     updatedAt: new Date("2024-01-22"),
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "CCTV", "Elevator", "Water Supply", "Backup Electricity", "Internet"],
     imageUrl:
       "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -953,6 +960,7 @@ export const mockProperties = [
 
     createdAt: new Date("2024-01-08"),
     updatedAt: new Date("2024-01-16"),
+    ammenities: ["WiFi", "Kitchen Appliances", "TV", "Heating", "Internet"],
     imageUrl:
       "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
@@ -996,6 +1004,7 @@ export const mockProperties = [
 
     createdAt: new Date("2024-01-05"),
     updatedAt: new Date("2024-01-25"),
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "CCTV", "Elevator", "Water Supply", "Backup Electricity", "Garden", "Balcony", "Kitchen Appliances", "TV", "Heating", "Internet"],
     imageUrl:
       "https://images.pexels.com/photos/1571453/pexels-photo-1571453.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
