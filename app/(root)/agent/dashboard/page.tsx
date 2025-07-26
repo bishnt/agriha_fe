@@ -22,32 +22,38 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import FilterPopup from "@/components/filters";
+import { FilterCriteria } from "@/lib/types";
 
 type SortOption = "relevant" | "recently-posted" | "most-popular";
 
 const AgentDashboard = () => {
+  const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid"); // Default to desktop grid
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [activeSort, setActiveSort] = useState<SortOption>("relevant");
 
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false); // State for sort dropdown
   const sortDropdownRef = useRef<HTMLDivElement>(null); // Ref for sort dropdown
+
+  // Filter state
+  const [appliedFilters, setAppliedFilters] = useState<FilterCriteria>({
+    distanceRadius: 0,
+    minPrice: 0,
+    maxPrice: 1000000,
+    bedrooms: 0,
+    bathrooms: 0,
+    minArea: 0,
+    maxArea: 10000,
+    isAttached: false,
+    type: [],
+  });
 
   /** -----------------------------
    * GraphQL — Queries & Mutations
@@ -100,38 +106,12 @@ const AgentDashboard = () => {
     }
   );
 
-  const [updateProperty, { loading: updateLoading }] = useMutation(
-    UPDATE_PROPERTY_MUTATION,
-    {
-      onCompleted: (data) => {
-        if (data?.updateProperty) {
-          setProperties((prev) =>
-            prev.map((p) =>
-              p.id === data.updateProperty.id ? data.updateProperty : p
-            )
-          );
-          toast.success("Property updated successfully");
-        }
-        closeEdit();
-      },
-      onError: (err) => {
-        console.error("Error updating property:", err);
-        toast.error("Unable to update property. Please try again.");
-      },
-    }
-  );
-
   /** -----------------------------
    * Handlers
    * ----------------------------*/
   const openEdit = (property: Property) => {
-    setEditingProperty(property);
-    setIsEditOpen(true);
-  };
-
-  const closeEdit = () => {
-    setEditingProperty(null);
-    setIsEditOpen(false);
+    // Navigate to edit page instead of opening popup
+    router.push(`/agent/editProperty?id=${property.id}`);
   };
 
   const handleDelete = async (id: number) => {
@@ -147,38 +127,14 @@ const AgentDashboard = () => {
     }
   };
 
-  const handleEditSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingProperty) return;
-
-    const formData = new FormData(e.currentTarget);
-
-    const variables: any = { id: editingProperty.id };
-    [
-      "propertyName",
-      "price",
-      "city",
-      "address",
-      "description",
-      "status",
-      "type",
-    ].forEach((field) => {
-      const value = formData.get(field);
-      if (value !== null) {
-        variables[field] = field === "price" ? parseFloat(value as string) : value;
-      }
-    });
-
-    try {
-      await updateProperty({ variables });
-    } catch (err) {
-      // Error is handled by onError in useMutation
-    }
-  };
-
   const handleSortChange = useCallback((sortOption: SortOption) => {
     setActiveSort(sortOption);
     setIsSortDropdownOpen(false); // Close dropdown on selection
+  }, []);
+
+  const handleApplyFilters = useCallback((filters: FilterCriteria) => {
+    setAppliedFilters(filters);
+    setShowFilterPopup(false);
   }, []);
 
   // Close sort dropdown when clicking outside
@@ -212,7 +168,18 @@ const AgentDashboard = () => {
     const matchesFilter =
       filterStatus === "all" || property.status === filterStatus;
 
-    return matchesSearch && matchesFilter;
+    // Apply advanced filters
+    const matchesAdvancedFilters = 
+      (appliedFilters.minPrice === 0 || property.price >= appliedFilters.minPrice) &&
+      (appliedFilters.maxPrice === 0 || property.price <= appliedFilters.maxPrice) &&
+      (appliedFilters.bedrooms === 0 || property.bedrooms >= appliedFilters.bedrooms) &&
+      (appliedFilters.bathrooms === 0 || property.bathrooms >= appliedFilters.bathrooms) &&
+      (appliedFilters.minArea === 0 || (property.area && property.area >= appliedFilters.minArea)) &&
+      (appliedFilters.maxArea === 0 || (property.area && property.area <= appliedFilters.maxArea)) &&
+      (!appliedFilters.isAttached || property.isAttached) &&
+      (appliedFilters.type.length === 0 || appliedFilters.type.includes(property.propertyType));
+
+    return matchesSearch && matchesFilter && matchesAdvancedFilters;
   });
 
   const sortedAndFilteredProperties = [...filteredProperties].sort((a, b) => {
@@ -299,7 +266,11 @@ const AgentDashboard = () => {
                 <option value="pending">Pending</option>
               </select>
 
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowFilterPopup(true)}
+              >
                 <Filter className="h-4 w-4 mr-2" /> More Filters
               </Button>
 
@@ -500,85 +471,13 @@ const AgentDashboard = () => {
         )}
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Property</DialogTitle>
-          </DialogHeader>
-          {editingProperty && (
-            <form id="edit-property-form" onSubmit={handleEditSave} className="space-y-4">
-              <div className="grid grid-cols-6 gap-4">
-                <div className="col-span-6 sm:col-span-3">
-                  <Label htmlFor="propertyName">Property Name</Label>
-                  <Input
-                    id="propertyName"
-                    name="propertyName"
-                    defaultValue={editingProperty.propertyName}
-                    required
-                  />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <Label htmlFor="price">Price</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="number"
-                    defaultValue={editingProperty.price}
-                    min={0}
-                    step={100}
-                    required
-                  />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" name="city" defaultValue={editingProperty.city} required />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" name="address" defaultValue={editingProperty.address} required />
-                </div>
-
-                <div className="col-span-6 sm:col-span-3">
-                  <Label htmlFor="status">Status</Label>
-                  <select
-                    id="status"
-                    name="status"
-                    defaultValue={editingProperty.status}
-                    className="w-full border border-gray-300 rounded-lg h-10 px-3 text-sm focus:ring-2 focus:ring-[#002b6d] focus:border-transparent"
-                  >
-                    <option value="available">Available</option>
-                    <option value="rented">Rented</option>
-                    <option value="sold">Sold</option>
-                    <option value="pending">Pending</option>
-                  </select>
-                </div>
-
-                <div className="col-span-6">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    defaultValue={editingProperty.description ?? ""}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </form>
-          )}
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={closeEdit} type="button">
-              Cancel
-            </Button>
-            <Button type="submit" form="edit-property-form" disabled={updateLoading}>
-              {updateLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Filter Popup */}
+      <FilterPopup
+        isOpen={showFilterPopup}
+        onClose={() => setShowFilterPopup(false)}
+        onApplyFilters={handleApplyFilters}
+        initialFilters={appliedFilters}
+      />
     </div>
   );
 };

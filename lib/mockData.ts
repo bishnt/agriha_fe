@@ -37,12 +37,13 @@ export const mockProperties = [
     isActive: true,
     isFeatured: true,
     isLiked: false,
-    views: 0,
+    views: 124,
 
     createdAt: new Date("2024-01-15"),
     updatedAt: new Date("2024-01-20"),
     imageUrl:
       "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "Elevator", "Water Supply"],
   },
   {
     id: 2,
@@ -80,12 +81,13 @@ export const mockProperties = [
     isActive: true,
     isFeatured: false,
     isLiked: false,
-    views: 0,
+    views: 89,
 
     createdAt: new Date("2024-01-10"),
     updatedAt: new Date("2024-01-18"),
     imageUrl:
       "https://images.pexels.com/photos/1396132/pexels-photo-1396132.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ammenities: ["Garden", "Parking", "Security", "Water Supply", "Backup Electricity", "Kitchen Appliances"],
   },
   {
     id: 3,
@@ -123,12 +125,13 @@ export const mockProperties = [
     isActive: true,
     isFeatured: true,
     isLiked: false,
-    views: 0,
+    views: 156,
 
     createdAt: new Date("2024-01-12"),
     updatedAt: new Date("2024-01-22"),
     imageUrl:
       "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ammenities: ["WiFi", "Air Conditioning", "Parking", "Security", "CCTV", "Elevator", "Internet"],
   },
   {
     id: 4,
@@ -166,12 +169,13 @@ export const mockProperties = [
     isActive: true,
     isFeatured: false,
     isLiked: false,
-    views: 0,
+    views: 78,
 
     createdAt: new Date("2024-01-08"),
     updatedAt: new Date("2024-01-16"),
     imageUrl:
       "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ammenities: ["WiFi", "Kitchen Appliances", "TV", "Laundry", "Water Supply"],
   },
   {
     id: 5,
@@ -209,11 +213,12 @@ export const mockProperties = [
     isActive: true,
     isFeatured: true,
     isLiked: false,
-    views: 0,
+    views: 234,
 
     createdAt: new Date("2024-01-05"),
     updatedAt: new Date("2024-01-25"),
     imageUrl:
       "https://images.pexels.com/photos/1571453/pexels-photo-1571453.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ammenities: ["WiFi", "Air Conditioning", "Swimming Pool", "Gym", "Security", "CCTV", "Elevator", "Balcony", "Garden", "Heating"],
   },
 ];

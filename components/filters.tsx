@@ -144,7 +144,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onApplyFilte
           <div className="flex flex-col gap-1.5">
             <Label className="text-sm font-medium text-gray-700">Property Type</Label>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
-              {['Room', 'Apartment', 'House'].map((type) => (
+              {['Room', 'Apartment', 'House', 'Villa', 'Studio', 'Penthouse', 'Commercial', 'Office'].map((type) => (
                 <div key={type} className="flex items-center space-x-2">
                   <Checkbox
                     id={`type-${type}`}

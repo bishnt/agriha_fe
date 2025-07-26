@@ -41,17 +41,21 @@ export interface Property {
 
 export interface PropertyFormData {
   propertyName: string;
+  title?: string;
   propertyType: string;
   description?: string;
   price: number;
+  priceType?: string;
   isForRent: boolean;
   isForSale: boolean;
   bedrooms: number;
   bathrooms: number;
+  isAttached?: boolean;
   kitchen: number;
   floor: number;
   furnishing?: string;
   area?: number;
+  areaUnit?: string;
   city: string;
   state: string;
   country: string;
@@ -64,6 +68,7 @@ export interface PropertyFormData {
   isFeatured: boolean;
   photos: File[]; // Array of files for multiple images
   amenities: string[];
+  views?: number;
 }
 
 export type PropertyImagePreview = {
