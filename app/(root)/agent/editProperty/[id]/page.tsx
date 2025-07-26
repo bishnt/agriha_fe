@@ -128,6 +128,7 @@ const EditProperty = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
   const [amenitiesSearch, setAmenitiesSearch] = useState('');
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(
@@ -137,6 +138,9 @@ const EditProperty = () => {
   );
   const [isSelectingLocation, setIsSelectingLocation] = useState(false);
   const [tempMarkerPosition, setTempMarkerPosition] = useState<[number, number] | null>(null);
+
+  // Refs for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Apollo Client mutation for updating property
   const [updateProperty, { loading: mutationLoading }] = useMutation(UPDATE_PROPERTY_MUTATION, {
@@ -220,6 +224,43 @@ const EditProperty = () => {
     setTempMarkerPosition(null);
   };
 
+  // Handle multiple photo selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newFiles = Array.from(files);
+    const newPhotoUrls = newFiles.map(file => URL.createObjectURL(file));
+    const newFileNames = newFiles.map(file => file.name);
+
+    // Update formData.photos (File[])
+    setFormData(prev => ({
+      ...prev,
+      photos: [...prev.photos, ...newFiles],
+    }));
+
+    // Update preview URLs separately
+    setPhotoPreviews(prev => [...prev, ...newPhotoUrls]);
+
+    // Update selected file names if needed
+    setSelectedFileNames(prev => [...prev, ...newFileNames]);
+
+    // Clear file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle removing a photo from the preview
+  const handleRemovePhoto = (indexToRemove: number) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, index) => index !== indexToRemove)
+    }));
+    setPhotoPreviews(prev => prev.filter((_, index) => index !== indexToRemove));
+    setSelectedFileNames(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -243,6 +284,9 @@ const EditProperty = () => {
     }
     if (!formData.latitude || !formData.longitude) {
       newErrors.location = 'Please select a location on the map';
+    }
+    if (formData.photos.length === 0) {
+      newErrors.photos = 'At least one property photo is required.';
     }
 
     setErrors(newErrors);
@@ -547,6 +591,72 @@ const EditProperty = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Property Photos Section */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <ImageIcon className="h-5 w-5 text-[#002b6d]" />
+              <h2 className="text-xl font-semibold text-gray-900">Property Photos</h2>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Property Images *
+              </label>
+              <div className="flex items-center space-x-2">
+                <input
+                  id="photos-upload"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center"
+                >
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Browse...
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {selectedFileNames.length > 0
+                    ? `${selectedFileNames.length} file(s) selected.`
+                    : 'No files selected.'}
+                </span>
+              </div>
+              {errors.photos && (
+                <p className="text-red-500 text-sm mt-1">{errors.photos}</p>
+              )}
+            </div>
+
+            {photoPreviews.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">Image Previews:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {photoPreviews.map((photoUrl, index) => (
+                    <div key={index} className="relative w-full h-32 overflow-hidden rounded-md border border-gray-200">
+                      <img
+                        src={photoUrl}
+                        alt={`Property Photo ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        title="Remove image"
+                      >
+                        <XCircle size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Amenities */}
