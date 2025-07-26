@@ -10,8 +10,14 @@ import type { ReactNode } from "react"
  */
 export default function ExploreLayout({ children }: { children: ReactNode }) {
   return (
+    <html>
+          <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>AGRIHA ‑ Find Homes, Far From Home</title>
+      </head>
     <div className="h-[100dvh] overflow-hidden md:min-h-screen md:overflow-auto bg-[#F8F8FF]">
       {children}
     </div>
+    </html>
   )
 }
