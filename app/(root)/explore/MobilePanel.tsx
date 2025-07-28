@@ -23,6 +23,7 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
   const [windowHeight, setWindowHeight] = useState(0)
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [properties, setProperties] = useState<Property[]>([]); 
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     setWindowHeight(window.innerHeight)
@@ -33,9 +34,12 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
 
   // Panel height definitions
   const PEEK_HEIGHT = 140
-  const MAX_HEIGHT = windowHeight * 0.9 // 70% of screen height
+  const MAX_HEIGHT = windowHeight * 0.9
 
   const getPanelHeight = () => {
+    // When search is focused, expand panel to give more space
+    if (isSearchFocused) return Math.min(windowHeight * 0.9, windowHeight - 300);
+    
     if (isDragging && startY !== null && currentY !== null) {
       const dragDistance = startY - currentY
       const baseHeight = isOpen ? MAX_HEIGHT : PEEK_HEIGHT
@@ -45,6 +49,10 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Don't start drag if touching the search input
+    const target = e.touches[0].target as HTMLElement;
+    if (target.closest('input, .search-section')) return;
+    
     setStartY(e.touches[0].clientY)
     setIsDragging(true)
   }
@@ -70,22 +78,33 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
   const togglePanel = () => setIsOpen(!isOpen)
 
   const handleLocationSelect = (location: Location) => {
-  setSelectedLocation(location);
-  // additional logic here like fetching properties for this location
-  console.log("Selected location:", location);
-};
+    setSelectedLocation(location);
+    // Close keyboard on mobile after selection
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      (document.activeElement as HTMLElement)?.blur();
+    }
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+    setIsOpen(true); // Auto-expand panel when searching
+  };
+
+  const handleSearchBlur = () => {
+    setIsSearchFocused(false);
+  };
 
   return (
     <div
       ref={panelRef}
       className={cn(
-        "fixed left-0 right-0 bottom-0 mx-3 z-20 rounded-t-3xl border border-gray-100 bg-[#F8F8FF] shadow-2xl",
-        "transition-all duration-300",
+        "fixed left-0 right-0 bottom-0 mx-3 z-50 rounded-t-3xl border border-gray-100 bg-[#F8F8FF] shadow-2xl",
+        "transition-all duration-300 ease-out",
         isDragging && "transition-none"
       )}
       style={{
         height: `${getPanelHeight()}px`,
-        touchAction: "none",
+        touchAction: isSearchFocused ? 'pan-y' : 'none',
         maxHeight: MAX_HEIGHT,
       }}
     >
@@ -103,17 +122,41 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
       <div className="px-4 pb-3">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Explore Properties</h2>
-          <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={togglePanel}>
-            <ChevronUp className={cn("h-5 w-5 transition-transform", isOpen ? "rotate-180" : "")} />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-1 h-8 w-8" 
+            onClick={togglePanel}
+            disabled={isSearchFocused}
+          >
+            <ChevronUp className={cn(
+              "h-5 w-5 transition-transform",
+              isOpen ? "rotate-180" : "",
+              isSearchFocused ? "opacity-50" : ""
+            )} />
           </Button>
         </div>
 
-        <SearchSection onLocationSelect={handleLocationSelect} setProperties={setProperties} />
-</div>
-
+        <div className="relative z-[60]"> {/* Increased z-index for search */}
+<SearchSection 
+  onLocationSelect={handleLocationSelect} 
+  setProperties={setProperties}
+  onFocus={handleSearchFocus}
+  onBlur={handleSearchBlur}
+  className="search-section" // Added class for touch event targeting
+/>
+        </div>
+      </div>
 
       {/* Scrollable content */}
-      <div className="overflow-y-auto px-1" style={{ maxHeight: `${getPanelHeight() - 200}px` }}>
+      <div 
+        className="overflow-y-auto px-1" 
+        style={{ 
+          maxHeight: `${getPanelHeight() - 200}px`,
+          // Prevent scrolling when search is focused
+          touchAction: isSearchFocused ? 'none' : 'auto'
+        }}
+      >
         {children}
       </div>
     </div>

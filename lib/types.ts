@@ -130,7 +130,12 @@ export interface FilterPopupProps {
   initialFilters: FilterCriteria;
 }
 
+import type { Dispatch, SetStateAction } from 'react';
+
 export interface SearchSectionProps {
-  onLocationSelect: (location: Location) => void;
-  setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
+  onLocationSelect?: (location: Location) => void;
+  setProperties?: Dispatch<SetStateAction<Property[]>>;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  className?: string;
 }
