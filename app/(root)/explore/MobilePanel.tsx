@@ -33,7 +33,7 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
 
   // Panel height definitions
   const PEEK_HEIGHT = 140
-  const MAX_HEIGHT = windowHeight * 0.7 // 70% of screen height
+  const MAX_HEIGHT = windowHeight * 0.9 // 70% of screen height
 
   const getPanelHeight = () => {
     if (isDragging && startY !== null && currentY !== null) {
