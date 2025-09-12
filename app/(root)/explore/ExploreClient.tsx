@@ -38,7 +38,12 @@ export default function ExploreClient() {
             <PropertyMap selectedLocation={selectedLocation} />
           </div>
           
-          <MobilePanel isOpen={isPanelOpen} setIsOpen={setIsPanelOpen}>
+          <MobilePanel 
+            isOpen={isPanelOpen} 
+            setIsOpen={setIsPanelOpen}
+            // Bubble location selection from mobile search to map
+            onLocationSelect={handleLocationSelect}
+          >
             <div className="h-full flex flex-col">
               <PropertyList />
             </div>

@@ -2,9 +2,8 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { ChevronUp, Search, SlidersHorizontal, MapPin } from "lucide-react"
+import { ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import SearchSection from "./SearchSection"
 import { Location, Property } from "@/lib/types"
@@ -13,9 +12,10 @@ interface MobilePanelProps {
   children: React.ReactNode
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
+  onLocationSelect?: (location: Location) => void
 }
 
-export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanelProps) {
+export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSelect }: MobilePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [startY, setStartY] = useState<number | null>(null)
   const [currentY, setCurrentY] = useState<number | null>(null)
@@ -79,6 +79,7 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
 
   const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
+    onLocationSelect?.(location);
     // Close keyboard on mobile after selection
     if (typeof window !== 'undefined' && window.visualViewport) {
       (document.activeElement as HTMLElement)?.blur();
@@ -143,7 +144,7 @@ export default function MobilePanel({ children, isOpen, setIsOpen }: MobilePanel
   setProperties={setProperties}
   onFocus={handleSearchFocus}
   onBlur={handleSearchBlur}
-  className="search-section" // Added class for touch event targeting
+  className="search-section"
 />
         </div>
       </div>

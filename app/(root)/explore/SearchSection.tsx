@@ -47,7 +47,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-export default function SearchSection({ onLocationSelect }: SearchSectionProps) {
+export default function SearchSection({ onLocationSelect, onFocus, onBlur, className }: SearchSectionProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Location[]>([])
   const [loading, setLoading] = useState(false)
@@ -142,20 +142,22 @@ export default function SearchSection({ onLocationSelect }: SearchSectionProps) 
   }, [searchQuery])
 
   const handleLocationClick = useCallback((location: Location) => {
-    onLocationSelect(location)
+    onLocationSelect?.(location)
     setSearchQuery(location.description || `${location.name}, ${location.city}`)
     setShowRecommendations(false)
   }, [onLocationSelect])
 
   const handleSearchFocus = useCallback(() => {
     setShowRecommendations(true)
-  }, [])
+    onFocus?.()
+  }, [onFocus])
 
   const handleSearchBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     if (resultsRef.current && !resultsRef.current.contains(e.relatedTarget as Node)) {
       setTimeout(() => setShowRecommendations(false), 100)
     }
-  }, [])
+    onBlur?.()
+  }, [onBlur])
 
   const handleResultMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -182,7 +184,7 @@ export default function SearchSection({ onLocationSelect }: SearchSectionProps) 
   }, [])
 
   return (
-   <div className="bg-white rounded-xl shadow-lg p-4 mb-4 w-full mx-auto relative z-[1000]">
+   <div className={`bg-white rounded-xl shadow-lg p-4 mb-4 w-full mx-auto relative z-[1000] ${className ?? ""}`}>
   {/* Search Input - Full width on mobile */}
   <div className="relative w-full mb-3">
     <div className="relative">
