@@ -5,7 +5,7 @@ import Image from "next/image"
 import React from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Bed, Bath, Square, Home, Heart } from "lucide-react"
+import { Bed, Bath, Square, Home, Heart, MapPin } from "lucide-react"
 import type { Property } from "@/lib/types"
 
 interface PropertyCardProps {
@@ -18,7 +18,12 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property, onViewDetails, onToggleLike, isDesktopListView = false, isActive = false }: PropertyCardProps) {
 
-  const handleViewDetails = () => {
+  const handleCardClick = () => {
+    onViewDetails?.(property.id.toString());
+  }
+
+  const handleViewDetails = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click when clicking button
     onViewDetails?.(property.id.toString());
   }
 
@@ -27,8 +32,18 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike, is
     onToggleLike?.(property.id.toString(), !property.isLiked);
   };
 
+  // Determine property status
+  const getPropertyStatus = () => {
+    if (property.isForRent) return "FOR RENT";
+    if (property.isForSale) return "FOR SALE";
+    return property.status?.toUpperCase() || "AVAILABLE";
+  };
+
   return (
-    <Card className={`overflow-hidden shadow-sm transition-all duration-200 border border-gray-200 rounded-lg ${isActive ? 'ring-2 ring-[#002B6D]' : 'hover:shadow-lg'}`}>
+    <Card 
+      className={`overflow-hidden shadow-sm transition-all duration-200 border border-gray-200 rounded-lg cursor-pointer ${isActive ? 'ring-2 ring-[#002B6D]' : 'hover:shadow-lg'}`}
+      onClick={handleCardClick}
+    >
       {/*
         Main card inner layout:
         - Mobile: Always flex-row (image left, details right)
@@ -52,8 +67,18 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike, is
             fill
             className="object-cover"
           />
-          <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-medium text-gray-800 shadow-sm">
-            {property.address}
+          {/* Status Badge - Top Right */}
+          <div className="absolute top-2 right-2 bg-gray-600 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+            {getPropertyStatus()}
+          </div>
+          {/* Price Overlay - Bottom Left */}
+          <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-md shadow-lg">
+            <div className="text-sm font-bold text-gray-900">
+              NRs. {property.price.toLocaleString()}
+            </div>
+            <div className="text-xs text-gray-600">
+              {property.priceType}
+            </div>
           </div>
         </div>
 
@@ -66,13 +91,15 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike, is
           }
         `}>
           <div>
-            <h3 className="text-base font-semibold text-gray-900 leading-tight mb-2 md:text-xl md:font-bold">
+            {/* Property Title - Single line with ellipsis */}
+            <h3 className="text-base font-semibold text-gray-900 leading-tight mb-2 md:text-xl md:font-bold truncate" title={property.title}>
               {property.title}
             </h3>
 
-            <div className="text-base font-bold text-gray-800 mb-3 md:text-xl">
-              NRs. {property.price.toLocaleString()}
-              <span className="text-xs font-normal text-gray-600 ml-1 md:text-sm">{property.priceType}</span>
+            {/* Location */}
+            <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span className="truncate">{property.address}</span>
             </div>
 
             {/* Details layout */}
@@ -108,8 +135,7 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike, is
           <div className="flex gap-2 mt-4">
             <Button
               onClick={handleViewDetails}
-              variant="outline"
-              className="flex-grow border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white bg-transparent font-semibold text-sm py-2.5 rounded-lg transition-all duration-200"
+              className="flex-grow bg-[#002B6D] text-white hover:bg-transparent hover:text-[#002B6D] hover:border-[#002B6D] border-[#002B6D] font-semibold text-sm py-2.5 rounded-lg transition-all duration-200"
             >
               View Details
             </Button>

@@ -273,17 +273,17 @@ export default function SearchBox({
     default: {
       container: "relative",
       input: "pl-9 h-10 bg-gray-50 border-2 border-[#002B6D] rounded-xl text-sm w-full focus:ring-1 focus:ring-[#002B6D]",
-      results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg z-[1001] max-h-80 overflow-y-auto"
+      results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-[1001] max-w-full overflow-hidden"
     },
     hero: {
       container: "relative w-full",
       input: "h-12 pl-10 pr-4 text-base border-0 rounded-lg focus:ring-2 focus:ring-[#002B6D] focus:border-transparent bg-transparent placeholder:text-gray-500 shadow-none",
-      results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg max-h-80 overflow-y-auto z-[1001] mt-1"
+      results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-[1001] mt-1 max-w-full overflow-hidden"
     },
     sticky: {
       container: "relative w-full",
       input: "w-full h-auto text-base border-0 focus:ring-0 bg-transparent pr-8 placeholder:text-gray-500 placeholder:text-sm shadow-none",
-      results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg max-h-80 overflow-y-auto z-[1001]"
+      results: "absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-[1001] max-w-full overflow-hidden"
     }
   }
 
@@ -308,52 +308,47 @@ export default function SearchBox({
           onMouseDown={handleResultMouseDown}
         >
           {value === "" ? (
-            <div className="p-4">
-              <div className="flex items-center gap-2 text-gray-700 font-medium text-sm mb-3">
-                <TrendingUp className="h-4 w-4" />
+            <div className="p-3">
+              <div className="flex items-center gap-2 text-gray-700 font-medium text-xs mb-2">
+                <TrendingUp className="h-3 w-3" />
                 Popular Locations
               </div>
-              {popularLocations.map((location) => (
+              {popularLocations.slice(0, 2).map((location) => (
                 <div
                   key={location.id}
-                  className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
+                  className="p-2 hover:bg-[#002B6D]/5 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center transition-all duration-200"
                   onClick={() => handleLocationClick(location)}
                 >
-                  <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1 mr-2" />
-                  <div>
-                    <h4 className="font-medium text-gray-800 text-sm leading-tight">
+                  <MapPin className="h-3 w-3 text-[#002B6D] flex-shrink-0 mr-2" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-medium text-gray-800 text-xs leading-tight truncate">
                       {location.name}
                     </h4>
-                    <p className="text-xs text-gray-600 leading-tight">
+                    <p className="text-xs text-gray-600 leading-tight truncate">
                       {location.description || `${location.city}, ${location.city}`}
                     </p>
-                    {location.propertyCount && (
-                      <span className="text-xs text-gray-500 mt-1 block">
-                        {location.propertyCount} properties
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           ) : loading ? (
-            <div className="flex items-center justify-center p-4 text-gray-500">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Searching...
+            <div className="flex items-center justify-center p-3 text-gray-500">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <span className="text-xs">Searching...</span>
             </div>
           ) : searchResults.length > 0 ? (
-            searchResults.map((location) => (
+            searchResults.slice(0, 2).map((location) => (
               <div
                 key={location.id}
-                className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-start"
+                className="p-2 hover:bg-[#002B6D]/5 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center transition-all duration-200"
                 onClick={() => handleLocationClick(location)}
               >
-                <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1 mr-2" />
-                <div>
-                  <h4 className="font-medium text-gray-800 text-sm leading-tight">
+                <MapPin className="h-3 w-3 text-[#002B6D] flex-shrink-0 mr-2" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-gray-800 text-xs leading-tight truncate">
                     {location.name}
                   </h4>
-                  <p className="text-xs text-gray-600 leading-tight">
+                  <p className="text-xs text-gray-600 leading-tight truncate">
                     {location.description}
                   </p>
                 </div>
@@ -361,7 +356,7 @@ export default function SearchBox({
             ))
           ) : (
             value.length >= 3 && (
-              <div className="p-4 text-gray-500 text-sm">
+              <div className="p-3 text-gray-500 text-xs">
                 No results found for "{value}"
               </div>
             )
