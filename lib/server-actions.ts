@@ -440,7 +440,7 @@ export async function sendOtpAction(mobileNumber: string) {
     const { data } = await client.mutate({
       mutation: SEND_OTP_MUTATION,
       variables: {
-        input: { phone: mobileNumber }
+        sendOtpInput: { phone: mobileNumber }
       },
     });
 
@@ -448,8 +448,21 @@ export async function sendOtpAction(mobileNumber: string) {
       success: data.sendOtp.success, 
       message: data.sendOtp.message 
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending OTP:", error);
-    return { success: false, error: "Failed to send OTP" };
+    
+    // Log GraphQL errors for debugging
+    if (error.graphQLErrors?.length > 0) {
+      console.error("GraphQL Errors:", error.graphQLErrors);
+    }
+    if (error.networkError?.result?.errors) {
+      console.error("Network Error Details:", error.networkError.result.errors);
+    }
+    
+    const errorMessage = error.graphQLErrors?.[0]?.message || 
+                        error.networkError?.result?.errors?.[0]?.message || 
+                        "Failed to send OTP";
+    
+    return { success: false, error: errorMessage };
   }
 }

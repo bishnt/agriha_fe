@@ -155,8 +155,8 @@ export const CREATE_ACCOUNT_MUTATION = gql`
 `;
 
 export const SEND_OTP_MUTATION = gql`
-  mutation SendOtp($input: sendOtpInput!) {
-    sendOtp(input: $input) {
+  mutation SendOtp($sendOtpInput: sendOtpInput!) {
+    sendOtp(sendOtpInput: $sendOtpInput) {
       success
       message
     }
