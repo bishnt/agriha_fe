@@ -432,3 +432,24 @@ export async function getPropertyAverageRating(propertyId: string) {
     return { success: false, error: "Failed to fetch rating" };
   }
 }
+
+// Server action to send OTP
+export async function sendOtpAction(mobileNumber: string) {
+  try {
+    const client = getServerApolloClient();
+    const { data } = await client.mutate({
+      mutation: SEND_OTP_MUTATION,
+      variables: {
+        sendOtpInput: { phone: mobileNumber }
+      },
+    });
+
+    return { 
+      success: data.sendOtp.success, 
+      message: data.sendOtp.message 
+    };
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    return { success: false, error: "Failed to send OTP" };
+  }
+}

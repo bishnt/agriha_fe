@@ -8,6 +8,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Phone, ArrowRight, Sparkles, Home, Users, Shield, X as LucideX } from "lucide-react"
+import { sendOtpAction } from "@/lib/server-actions"
 import { useRouter } from "next/navigation"
 import { Separator } from "@/components/ui/separator"
 
@@ -43,21 +44,13 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mobileNumber: mobileNumber.replace(/\s/g, ""),
-        }),
-      })
+      const result = await sendOtpAction(mobileNumber.replace(/\s/g, ""))
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (result.success) {
         sessionStorage.setItem("registration_mobile", mobileNumber)
         router.push("/auth/verify-otp")
       } else {
-        setError(data.message || "Failed to send OTP. Please try again.")
+        setError(result.error || "Failed to send OTP. Please try again.")
       }
     } catch (error) {
       setError("Something went wrong. Please try again.")

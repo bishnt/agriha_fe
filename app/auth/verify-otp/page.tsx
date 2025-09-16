@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRight, Sparkles, Shield, Clock, X as LucideX } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { sendOtpAction } from "@/lib/server-actions"
 
 export default function VerifyOTPPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
@@ -112,13 +113,9 @@ export default function VerifyOTPPage() {
     setError("")
 
     try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber }),
-      })
+      const result = await sendOtpAction(mobileNumber)
 
-      if (response.ok) {
+      if (result.success) {
         const timer = setInterval(() => {
           setResendTimer((prev) => {
             if (prev <= 1) {
