@@ -440,7 +440,7 @@ export async function sendOtpAction(mobileNumber: string) {
     const { data } = await client.mutate({
       mutation: SEND_OTP_MUTATION,
       variables: {
-        sendOtpInput: { phone: mobileNumber }
+        input: { phone: mobileNumber }
       },
     });
 
