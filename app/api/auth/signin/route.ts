@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send to your GraphQL backend
-    const response = await fetch(process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
+    const response = await fetch(process.env.GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

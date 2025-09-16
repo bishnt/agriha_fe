@@ -18,7 +18,7 @@ export default function ClientSideProviders({ children }: { children: ReactNode 
 
   // Create Apollo Client instance
   const client = new ApolloClient({
-    uri: '/api/graphql', // Change this URI to your GraphQL endpoint
+    uri: typeof window !== 'undefined' ? '/api/graphql' : (process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || process.env.GRAPHQL_ENDPOINT || 'http://localhost:4000/graphql'),
     cache: new InMemoryCache(),
   });
 

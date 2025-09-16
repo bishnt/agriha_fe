@@ -3,7 +3,6 @@
 
 import { useRef, useEffect, useState } from "react";
 import { gql, useMutation } from "@apollo/client";
-import { mockProperties } from "@/lib/mockData1";
 import PropertyCard, { PropertyCardProps } from "@/components/property-card";
 import useActiveProperty from "./useActiveProperty";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -56,10 +55,10 @@ export default function PropertyList() {
     if (activeId) scrollTo(activeId);
   }, [activeId, viewMode]);
 
-  const totalPages = Math.ceil(mockProperties.length / itemsPerPage);
+  const totalPages = Math.ceil(0 / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentProperties = mockProperties.slice(startIndex, endIndex);
+  const currentProperties: any[] = [];
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -91,7 +90,7 @@ export default function PropertyList() {
           {!isMobile ? (
             <div className="p-6 pb-4 flex items-center justify-between bg-white border-b border-slate-100 rounded-t-2xl">
               <h2 className="text-xl font-semibold text-slate-900">
-                {mockProperties.length} Properties Found
+                0 Properties Found
               </h2>
               <div className="flex items-center gap-4">
                 <select className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -123,7 +122,7 @@ export default function PropertyList() {
           ) : (
             <div className="p-4 pb-3 flex items-center justify-between bg-white border-b border-slate-100 rounded-t-2xl">
               <span className="text-sm font-medium text-slate-900">
-                {mockProperties.length} properties
+                0 properties
               </span>
               <div className="flex items-center gap-2">
                 <select className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">

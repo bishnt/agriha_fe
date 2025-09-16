@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useMutation, useApolloClient } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PropertyFormData } from '@/lib/types'; // Assuming this type is correctly defined for 'photos' as string[]
 import { useMap, useMapEvents } from 'react-leaflet';
-import { CREATE_PROPERTY_MUTATION, GET_AGENT_PROPERTIES_QUERY, AUTHENTICATE_MUTATION } from '@/lib/graphql';
+import { CREATE_PROPERTY_MUTATION, GET_AGENT_PROPERTIES_QUERY } from '@/lib/graphql';
 import { ArrowLeft, Save, MapPin, DollarSign, Home, Image as ImageIcon, Check, XCircle } from 'lucide-react';
 import { 
   Wifi, 
@@ -75,9 +75,7 @@ const nominatimApiUrl = 'https://nominatim.openstreetmap.org/search';
 // Nepal Cities API URL (using a different, more reliable API for cities within Nepal)
 const nepalCitiesApiUrl = 'https://nepal-purbeli-cities-api.vercel.app/api/cities';
 
-const ListProperty = () => {
-  const client = useApolloClient();
-  
+export default function ListProperty() {
   // Apollo Client mutation for creating property
   const [createProperty, { loading: mutationLoading }] = useMutation(CREATE_PROPERTY_MUTATION, {
     refetchQueries: [
@@ -87,12 +85,10 @@ const ListProperty = () => {
       }
     ],
     onCompleted: (data) => {
-      if (data?.createProperty?.success) {
+      if (data?.createProperty) {
         alert('Property listed successfully!');
         // Optionally redirect or clear form
         window.location.href = '/agent/dashboard';
-      } else if (data?.createProperty?.message) {
-        alert(data.createProperty.message);
       }
     },
     onError: (error) => {
@@ -433,13 +429,12 @@ const AMENITIES = [
     if (!formData.isForRent && !formData.isForSale) {
       newErrors.listingType = 'Please select if property is for rent or sale';
     }
-    // Temporarily relax location and photos requirement for testing
-    // if (!formData.latitude || !formData.longitude) {
-    //   newErrors.location = 'Please select a location on the map';
-    // }
-    // if (formData.photos.length === 0) {
-    //   newErrors.photos = 'At least one property photo is required.';
-    // }
+    if (!formData.latitude || !formData.longitude) {
+      newErrors.location = 'Please select a location on the map';
+    }
+    if (formData.photos.length === 0) {
+        newErrors.photos = 'At least one property photo is required.';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -455,84 +450,24 @@ const AMENITIES = [
     }
 
     try {
-      console.log("Submitting formData:", formData);
+      // IMPORTANT: In a real application, `formData.photos` will contain local object URLs.
+      // You need to upload these images to a cloud storage service (e.g., AWS S3, Cloudinary, Firebase Storage)
+      // *before* sending the form data to your GraphQL backend.
+      // The `createProperty` mutation should receive an array of *public URLs* for the images.
+      // For this example, we're just passing the local URLs, which will likely not persist or be usable by your backend.
+      // A typical workflow would be:
+      // 1. Map `formData.photos` (local URLs) to actual `File` objects.
+      // 2. Upload each `File` to your chosen storage, getting back a public URL.
+      // 3. Replace `formData.photos` with this array of public URLs.
 
-      // Helpers
-      const toEnum = (value?: string) =>
-        (value || '').trim().toUpperCase().replace(/\s+/g, '_')
-
-      // Get accountId from authentication
-      let accountId: number | undefined
-      
-      // First try to get from current authentication context
-      try {
-        // Use the authenticate mutation to get current user data
-        const { data: authData } = await client.mutate({
-          mutation: AUTHENTICATE_MUTATION,
-          variables: {
-            authenticateInput: {
-              method: "session",
-              identifier: "current"
-            }
-          }
-        });
-        
-        if (authData?.authenticate?.success) {
-          // For now, use a default account ID since authenticate doesn't return account data
-          accountId = 1; // This should be replaced with proper session management
-        }
-      } catch (authError) {
-        console.log('Authentication check failed, trying session storage:', authError);
-        
-        // Fallback to session storage
-        try {
-          const raw = typeof window !== 'undefined' ? sessionStorage.getItem('user_data') : null
-          if (raw) {
-            const parsed = JSON.parse(raw)
-            const id = parsed?.id ?? parsed?.accountId
-            const n = typeof id === 'string' ? parseInt(id, 10) : id
-            if (Number.isFinite(n)) accountId = n as number
-          }
-        } catch {}
-      }
-
-      if (!accountId) {
-        alert('Please log in to create a property listing.');
-        return;
-      }
-
-      const transformedInput: any = {
-        accountId: accountId,
-        propertyName: formData.propertyName,
-        propertyType: toEnum(formData.propertyType),
-        description: formData.description,
-        price: Number(formData.price) || 0,
-        isForRent: formData.isForRent !== undefined ? !!formData.isForRent : true,
-        isForSale: formData.isForSale !== undefined ? !!formData.isForSale : false,
-        bedrooms: Number(formData.bedrooms) || 1,
-        bathrooms: Number(formData.bathrooms) || 1,
-        kitchen: Number(formData.kitchen) || 1,
-        floor: Number(formData.floor) || 1,
-        furnishing: formData.furnishing || "UNFURNISHED",
-        area: Number(formData.area) || 100,
-        city: formData.city,
-        state: formData.state,
-        country: formData.country,
-        address: formData.address,
-        landmark: formData.landmark || undefined,
-        latitude: formData.latitude || undefined,
-        longitude: formData.longitude || undefined,
-        isActive: formData.isActive !== undefined ? !!formData.isActive : true,
-        isFeatured: formData.isFeatured !== undefined ? !!formData.isFeatured : false,
-      }
-
-      Object.keys(transformedInput).forEach((k) => {
-        if (transformedInput[k] === undefined) delete transformedInput[k]
-      })
+      console.log("Submitting formData:", formData); // Log for debugging
 
       await createProperty({
         variables: {
-          input: transformedInput,
+          input: {
+            ...formData,
+            photos: formData.photos // This needs to be an array of image URLs after actual upload
+          }
         }
       });
     } catch (error) {
@@ -568,21 +503,21 @@ const AMENITIES = [
               </Button>
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">List New Property</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">List New Property</h1>
+          <p className="text-sm md:text-base text-gray-600">
             Add your property details to list it on our platform.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
           {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
               <Home className="h-5 w-5 text-[#002b6d]" />
-              <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Basic Information</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="md:col-span-2">
                 <label htmlFor="propertyName" className="block text-sm font-medium text-gray-700 mb-2">
                   Property Name *
@@ -652,13 +587,13 @@ const AMENITIES = [
           </div>
 
           {/* Pricing & Listing Type */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
               <DollarSign className="h-5 w-5 text-[#002b6d]" />
-              <h2 className="text-xl font-semibold text-gray-900">Pricing & Listing Type</h2>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Pricing & Listing Type</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
                   Price (Rs.) *
@@ -695,7 +630,7 @@ const AMENITIES = [
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Listing Type *
                 </label>
-                <div className="flex space-x-6">
+                <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-2 sm:space-y-0">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -728,264 +663,26 @@ const AMENITIES = [
             </div>
           </div>
 
-          {/* Property Details */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
-              <Home className="h-5 w-5 text-[#002b6d]" />
-              <h2 className="text-xl font-semibold text-gray-900">Property Details</h2>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div>
-                <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-2">
-                  Bedrooms
-                </label>
-                <Input
-                  id="bedrooms"
-                  type="number"
-                  name="bedrooms"
-                  value={formData.bedrooms}
-                  onChange={handleInputChange}
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-2">
-                  Bathrooms
-                </label>
-                <Input
-                  id="bathrooms"
-                  type="number"
-                  name="bathrooms"
-                  value={formData.bathrooms}
-                  onChange={handleInputChange}
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="kitchen" className="block text-sm font-medium text-gray-700 mb-2">
-                  Kitchens
-                </label>
-                <Input
-                  id="kitchen"
-                  type="number"
-                  name="kitchen"
-                  value={formData.kitchen}
-                  onChange={handleInputChange}
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="floor" className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor
-                </label>
-                <Input
-                  id="floor"
-                  type="number"
-                  name="floor"
-                  value={formData.floor}
-                  onChange={handleInputChange}
-                  min="0"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Property Photos Section */}
-  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center space-x-2 mb-6">
-        <ImageIcon className="h-5 w-5 text-[#002b6d]" />
-        <h2 className="text-xl font-semibold text-gray-900">Property Photos</h2>
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Upload Property Images *
-        </label>
-        <div className="flex items-center space-x-2">
-          <input
-            id="photos-upload"
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileChange}
-            ref={fileInputRef}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center"
-          >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Browse...
-          </Button>
-          <span className="text-sm text-gray-500">
-            {selectedFileNames.length > 0
-              ? `${selectedFileNames.length} file(s) selected.`
-              : 'No files selected.'}
-          </span>
-        </div>
-        {errors.photos && (
-          <p className="text-red-500 text-sm mt-1">{errors.photos}</p>
-        )}
-      </div>
-
-      {photoPreviews.length > 0 && (
-        <div className="mt-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">Image Previews:</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {photoPreviews.map((photoUrl, index) => (
-              <div key={index} className="relative w-full h-32 overflow-hidden rounded-md border border-gray-200">
-                <img
-                  src={photoUrl}
-                  alt={`Property Photo ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemovePhoto(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                  title="Remove image"
-                >
-                  <XCircle size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="flex items-center text-xl font-semibold text-gray-900 mb-6">
-  <Wifi className="h-5 w-5 mr-2 text-[#002b6d]" />
-  Amenities
-</h2>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Amenities
-              </label>
-              <Input
-                type="text"
-                placeholder="Search amenities..."
-                value={amenitiesSearch}
-                onChange={(e) => setAmenitiesSearch(e.target.value)}
-                className="mb-4"
-              />
-              
-              {/* Selected amenities as badges */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {formData.amenities?.map(amenityName => {
-                  const amenity = AMENITIES.find(a => a.name === amenityName);
-                  return (
-                    <div 
-                      key={amenityName} 
-                      className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {amenity?.icon && <span className="mr-1">{amenity.icon}</span>}
-                      {amenityName}
-                      <button 
-                        type="button" 
-                        onClick={() => toggleAmenity(amenityName)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <XCircle size={16} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              {/* Amenities options with icons */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {visibleAmenities.map(({ name, icon }) => (
-                  <div 
-                    key={name}
-                    onClick={() => toggleAmenity(name)}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors flex items-center space-x-2 ${
-                      formData.amenities?.includes(name)
-                        ? 'bg-blue-50 border-blue-300 ring-1 ring-blue-200'
-                        : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                    }`}
-                  >
-                    <div className={`p-2 rounded-md ${
-                      formData.amenities?.includes(name) 
-                        ? 'bg-blue-100 text-blue-600' 
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {icon}
-                    </div>
-                    <span className="text-sm font-medium">{name}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Show More/Less toggle */}
-              {filteredAmenities.length > 8 && (
-                <div className="mt-4 text-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowAllAmenities(!showAllAmenities)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    {showAllAmenities ? 'Show Less' : 'Show More...'}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Location */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-2 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
               <MapPin className="h-5 w-5 text-[#002b6d]" />
-              <h2 className="text-xl font-semibold text-gray-900">Location</h2>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Location</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div>
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
                   City *
                 </label>
                 <Input
                   id="city"
-                  ref={cityInputRef}
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  placeholder="Search for a city in Nepal"
-                  onFocus={() => {
-                    if (formData.city.trim() && nepalCities.length > 0) {
-                      const fuse = new Fuse(nepalCities, { keys: [], threshold: 0.4 });
-                      const results = fuse.search(formData.city).map(result => result.item);
-                      setCitySuggestions(results.slice(0, 10));
-                    } else if (nepalCities.length > 0) {
-                       setCitySuggestions(nepalCities.slice(0, 10)); // Show some initial suggestions
-                    }
-                    setShowCitySuggestions(true);
-                  }}
+                  placeholder="Enter city"
                   className={errors.city ? 'border-red-500' : ''}
                 />
-                {showCitySuggestions && citySuggestions.length > 0 && (
-                  <div
-                    ref={suggestionsRef}
-                    className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                  >
-                    {citySuggestions.map((city, index) => (
-                      <div
-                        key={index}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleCitySelect(city)}
-                      >
-                        {city}
-                      </div>
-                    ))}
-                  </div>
-                )}
                 {errors.city && (
                   <p className="text-red-500 text-sm mt-1">{errors.city}</p>
                 )}
@@ -1012,55 +709,6 @@ const AMENITIES = [
                 )}
               </div>
 
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  Country
-                </label>
-                <Input
-                  id="country"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  placeholder="Enter country"
-                  readOnly // Country is fixed as Nepal
-                />
-              </div>
-
-              <div className="relative">
-                <label htmlFor="landmark" className="block text-sm font-medium text-gray-700 mb-2">
-                  Landmark *
-                </label>
-                <Input
-                  id="landmark"
-                  ref={landmarkInputRef}
-                  name="landmark"
-                  value={formData.landmark}
-                  onChange={handleInputChange}
-                  placeholder="Search for a nearby landmark"
-                  onFocus={() => setShowLandmarkSuggestions(true)}
-                />
-                {showLandmarkSuggestions && landmarkSuggestions.length > 0 && (
-                  <div
-                    ref={suggestionsRef}
-                    className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                  >
-                    {landmarkSuggestions.map((item, index) => (
-                      <div
-                        key={index}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleLandmarkSelect(item)}
-                      >
-                        <div className="font-medium">{item.display_name}</div>
-                        <div className="text-xs text-gray-500">
-                          {item.address?.city || item.address?.town || item.address?.village || ''}
-                          {item.address?.state ? `, ${item.address.state}` : ''}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               <div className="md:col-span-2">
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
                   Address *
@@ -1070,7 +718,7 @@ const AMENITIES = [
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Enter full address (e.g., Street, Ward No., Area)"
+                  placeholder="Enter full address"
                   rows={3}
                   className={errors.address ? 'border-red-500' : ''}
                 />
@@ -1078,183 +726,27 @@ const AMENITIES = [
                   <p className="text-red-500 text-sm mt-1">{errors.address}</p>
                 )}
               </div>
-
-              <div className="md:col-span-2">
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Property Location on Map *
-                  </label>
-                  {!isSelectingLocation ? (
-<Button
-  type="button"
-  variant="outline"
-  size="sm"
-  onClick={() => setIsSelectingLocation(true)}
-  className="bg-[#002b6d] text-white hover:bg-[#003c9a] focus:ring-[#002b6d]"
->
-  <MapPin className="h-4 w-4 mr-2" />
-  Set Exact Location
-</Button>
-                  ) : (
-                    <div className="flex space-x-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={resetLocationSelection}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={confirmLocation}
-                        disabled={!tempMarkerPosition}
-                      >
-                        <Check className="h-4 w-4 mr-2" />
-                        Confirm Location
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {errors.location && (
-                  <p className="text-red-500 text-sm mb-2">{errors.location}</p>
-                )}
-
-                <div className="h-96 rounded-md overflow-hidden border border-gray-300">
-                  {/* Ensure MapContainer renders only on client-side to avoid SSR issues with Leaflet */}
-                  {typeof window !== 'undefined' && (
-                    <MapContainer
-                      center={selectedLocation || [27.7172, 85.3240]} // Default to Kathmandu, Nepal
-                      zoom={selectedLocation ? 16 : 12}
-                      style={{ height: '100%', width: '100%' }}
-                    >
-                      <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      />
-
-                      {isSelectingLocation && <MapClickHandler onClick={(latlng) => setTempMarkerPosition(latlng)} />}
-
-                      {/* Show the confirmed marker if not in selection mode */}
-                      {selectedLocation && !isSelectingLocation && (
-                        <Marker position={selectedLocation}>
-                          <Popup>Your Property Location</Popup>
-                        </Marker>
-                      )}
-
-                      {/* Show the temporary marker during selection */}
-                      {isSelectingLocation && tempMarkerPosition && (
-                        <Marker position={tempMarkerPosition}>
-                          <Popup>Selected Location</Popup>
-                        </Marker>
-                      )}
-
-                      {/* Update map view to selected location if it changes and not in selection mode */}
-                      {selectedLocation && !isSelectingLocation && (
-                        <MapViewUpdater center={selectedLocation} />
-                      )}
-                    </MapContainer>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label htmlFor="latitude" className="block text-sm font-medium text-gray-700 mb-1">
-                      Latitude
-                    </label>
-                    <Input
-                      id="latitude"
-                      type="number"
-                      step="0.000001"
-                      name="latitude"
-                      value={formData.latitude}
-                      onChange={handleInputChange}
-                      readOnly
-                      placeholder="Automatically set by map"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="longitude" className="block text-sm font-medium text-gray-700 mb-1">
-                      Longitude
-                    </label>
-                    <Input
-                      id="longitude"
-                      type="number"
-                      step="0.000001"
-                      name="longitude"
-                      value={formData.longitude}
-                      onChange={handleInputChange}
-                      readOnly
-                      placeholder="Automatically set by map"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Settings */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Additional Settings</h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={() => handleCheckboxChange('isActive')}
-                  className="h-4 w-4 text-[#002b6d] border-gray-300 rounded focus:ring-[#002b6d]"
-                />
-                <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
-                  Make property active immediately
-                </label>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isFeatured"
-                  name="isFeatured"
-                  checked={formData.isFeatured}
-                  onChange={() => handleCheckboxChange('isFeatured')}
-                  className="h-4 w-4 text-[#002b6d] border-gray-300 rounded focus:ring-[#002b6d]"
-                />
-                <label htmlFor="isFeatured" className="ml-2 text-sm text-gray-700">
-                  Feature this property (additional charges may apply)
-                </label>
-              </div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Link href="/agent/dashboard">
-              <Button variant="outline" type="button">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <Button
+              type="submit"
+              disabled={mutationLoading}
+              className="flex-1 sm:flex-none bg-[#002b6d] hover:bg-[#001a4d] text-white font-semibold py-3 px-8"
+            >
+              <Save className="h-5 w-5 mr-2" />
+              {mutationLoading ? 'Listing Property...' : 'List Property'}
+            </Button>
+            <Link href="/agent/dashboard" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="w-full py-3 px-8">
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" disabled={mutationLoading} size="lg">
-              {mutationLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Listing Property...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  List Property
-                </>
-              )}
-            </Button>
           </div>
         </form>
       </div>
     </div>
   );
-};
-
-export default ListProperty;
+}

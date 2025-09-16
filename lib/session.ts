@@ -60,7 +60,7 @@ export class SessionManager {
       throw new Error("No authentication token available")
     }
 
-    const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "/api/graphql", {
+    const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

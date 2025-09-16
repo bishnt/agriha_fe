@@ -7,22 +7,20 @@ export async function POST(request: NextRequest) {
     // GraphQL mutation for sending OTP
     const graphqlQuery = {
       query: `
-        mutation SendOTP($input: SendOTPInput!) {
-          sendOTP(input: $input) {
+        mutation SendOTP($sendOtpInput: sendOtpInput!) {
+          sendOtp(sendOtpInput: $sendOtpInput) {
             success
             message
           }
         }
       `,
       variables: {
-        input: {
-          mobileNumber,
-        },
+        sendOtpInput: { phone: mobileNumber },
       },
     }
 
     // Send to your GraphQL backend
-    const response = await fetch(process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
+    const response = await fetch(process.env.GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,8 +35,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      success: data.data.sendOTP.success,
-      message: data.data.sendOTP.message,
+      success: data.data.sendOtp.success,
+      message: data.data.sendOtp.message,
     })
   } catch (error) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })

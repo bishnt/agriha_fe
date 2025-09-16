@@ -12,11 +12,10 @@ import {
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 
-import { mockProperties } from "@/lib/mockData1"
 import { Location, Property } from "@/lib/types"
 import useActiveProperty from "./useActiveProperty"
 import { useIsMobile } from "@/hooks/use-mobile"
-import PropertyCard from "@/components/PropertyCard" // Adjust import path as needed
+import PropertyCard from "@/components/property-card" // Adjust import path as needed
 
 /* ──────────────────────────────────────────────────────────
    Leaflet default marker images (still needed for general markers)
@@ -88,21 +87,21 @@ const makeMarkerIcon = (active: boolean, mobile: boolean) => {
 /* ──────────────────────────────────────────────────────────
    Fit map to markers once on mount / resize
    ────────────────────────────────────────────────────────── */
-const FitBounds = () => {
+const FitBounds = ({ properties }: { properties: Property[] }) => {
   const map = useMap()
   const mobile = useIsMobile()
 
   useEffect(() => {
-    const coords = mockProperties
-      .filter((p) => p.latitude && p.longitude)
-      .map((p) => [p.latitude!, p.longitude!] as [number, number])
+    const coords: [number, number][] = properties
+      .filter((p: Property) => p.latitude && p.longitude)
+      .map((p: Property) => [p.latitude!, p.longitude!] as [number, number])
 
     if (coords.length) {
       map.fitBounds(L.latLngBounds(coords), {
         maxZoom: mobile ? 12 : 14,
       })
     }
-  }, [map, mobile])
+  }, [map, mobile, properties])
 
   return null
 }
@@ -110,7 +109,7 @@ const FitBounds = () => {
 /* ──────────────────────────────────────────────────────────
    Respond to selected property / location
    ────────────────────────────────────────────────────────── */
-const MapController = ({ loc }: { loc: Location | null }) => {
+const MapController = ({ loc, properties }: { loc: Location | null; properties: Property[] }) => {
   const map = useMap()
   const [activeId] = useActiveProperty()
   const mobile = useIsMobile()
@@ -118,11 +117,11 @@ const MapController = ({ loc }: { loc: Location | null }) => {
   // click in list → fly to property
   useEffect(() => {
     if (!activeId) return
-    const p = mockProperties.find((m) => m.id === activeId)
+    const p = properties.find((m: Property) => m.id === activeId)
     if (p?.latitude && p?.longitude) {
       map.flyTo([p.latitude, p.longitude], mobile ? 14 : 15, { duration: 1 })
     }
-  }, [activeId, map, mobile])
+  }, [activeId, map, mobile, properties])
 
   // location selector (e.g. city dropdown)
   useEffect(() => {
@@ -142,13 +141,14 @@ const MapController = ({ loc }: { loc: Location | null }) => {
    ────────────────────────────────────────────────────────── */
 interface Props {
   selectedLocation?: Location | null
+  properties?: Property[]
 }
 
-export default function PropertyMap({ selectedLocation = null }: Props) {
+export default function PropertyMap({ selectedLocation = null, properties = [] }: Props) {
   const [activeId, setActiveId] = useActiveProperty()
   const mobile = useIsMobile()
 
-  const valid = mockProperties.filter((p) => p.latitude && p.longitude)
+  const valid: Property[] = properties.filter((p: Property) => p.latitude && p.longitude)
 
   const onMarkerClick = (id: number) => setActiveId(id)
 
@@ -171,8 +171,8 @@ export default function PropertyMap({ selectedLocation = null }: Props) {
             }
           />
 
-          <FitBounds />
-          <MapController loc={selectedLocation} />
+          <FitBounds properties={valid} />
+          <MapController loc={selectedLocation} properties={valid} />
 
           {/* Marker for selectedLocation (red indicator) */}
           {selectedLocation && (
@@ -181,30 +181,19 @@ export default function PropertyMap({ selectedLocation = null }: Props) {
               icon={redIcon}
             >
               <Popup maxWidth={mobile ? 300 : 350} minWidth={mobile ? 280 : 320}>
-                {(() => {
-                  const property = mockProperties.find(p => 
-                    p.latitude === selectedLocation.latitude && 
-                    p.longitude === selectedLocation.longitude
-                  )
-                  
-                  return property ? (
-                    <CustomPopup property={property} mobile={mobile} />
-                  ) : (
-                    <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
-                      <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
-                        {selectedLocation.name}
-                      </h3>
-                      <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
-                        {selectedLocation.description || `${selectedLocation.city}, ${selectedLocation.state}`}
-                      </p>
-                      {selectedLocation.propertyCount && (
-                        <span className="text-xs text-gray-500 mt-1 block">
-                          {selectedLocation.propertyCount} properties
-                        </span>
-                      )}
-                    </div>
-                  )
-                })()}
+                <div className={`p-2 ${mobile ? "min-w-[180px]" : "min-w-[200px]"}`}>
+                  <h3 className={`font-semibold mb-1 ${mobile ? "text-xs" : "text-sm"}`}>
+                    {selectedLocation.name}
+                  </h3>
+                  <p className={`text-gray-600 mb-2 ${mobile ? "text-xs" : "text-xs"}`}>
+                    {selectedLocation.description || `${selectedLocation.city}, ${selectedLocation.state}`}
+                  </p>
+                </div>
+                {selectedLocation.propertyCount && (
+                  <span className="text-xs text-gray-500 mt-1 block">
+                    {selectedLocation.propertyCount} properties
+                  </span>
+                )}
               </Popup>
             </Marker>
           )}

@@ -1,75 +1,122 @@
-import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import FacebookProvider from "next-auth/providers/facebook"
+import { redirect } from 'next/navigation'
+export type { Session } from '@/lib/auth-types'
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET ?? "dev-secret-do-not-use-in-prod",
-  debug: process.env.NODE_ENV !== "production",
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, account }) {
-      if (account) {
-        // Send social login data to GraphQL backend
-        try {
-          const response = await fetch(process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              query: `
-                mutation SocialSignIn($input: SocialSignInInput!) {
-                  socialSignIn(input: $input) {
-                    token
-                    user {
-                      id
-                      email
-                      name
-                    }
-                  }
-                }
-              `,
-              variables: {
-                input: {
-                  provider: account.provider,
-                  providerId: account.providerAccountId,
-                  email: token.email,
-                  name: token.name,
-                  accessToken: account.access_token,
-                },
-              },
-            }),
-          })
+import type { User, Session } from '@/lib/auth-types'
 
-          const data = await response.json()
+// Simple session management without JWT
+export async function auth(): Promise<Session | null> {
+  // Authentication is handled entirely by the backend
+  // Frontend doesn't manage sessions or tokens
+  return null
+}
 
-          if (data.data?.socialSignIn?.token) {
-            token.accessToken = data.data.socialSignIn.token
+// Login function that communicates with your backend
+export async function login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const graphqlEndpoint =
+      process.env.GRAPHQL_ENDPOINT ||
+      process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ||
+      'http://localhost:4000/graphql'
+
+    const response = await fetch(graphqlEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Include cookies for session management
+      body: JSON.stringify({
+        query: `
+          mutation Login($loginInput: loginInput!) {
+            login(loginInput: $loginInput) {
+              success
+              message
+            }
           }
-        } catch (error) {
-          console.error("Social sign-in error:", error)
-        }
+        `,
+        variables: { 
+          loginInput: { 
+            email, 
+            password 
+          } 
+        },
+      }),
+    })
+
+    const data = await response.json()
+
+    if (data.data?.login?.success) {
+      return {
+        success: true,
       }
-      return token
-    },
-    async session({ session, token }) {
-      if (token.accessToken) {
-        ;(session as any).accessToken = token.accessToken
+    } else {
+      return {
+        success: false,
+        error: data.data?.login?.message || data.errors?.[0]?.message || 'Login failed',
       }
-      return session
-    },
-  },
-  pages: {
-    signIn: "/auth/signin",
-  },
-})
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+    }
+  }
+}
+
+// Social login function
+export async function socialLogin(provider: string, accessToken: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const graphqlEndpoint =
+      process.env.GRAPHQL_ENDPOINT ||
+      process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ||
+      'http://localhost:4000/graphql'
+
+    const response = await fetch(graphqlEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Include cookies for session management
+      body: JSON.stringify({
+        query: `
+          mutation SocialSignIn($input: SocialSignInInput!) {
+            socialSignIn(input: $input) {
+              success
+              message
+            }
+          }
+        `,
+        variables: {
+          input: {
+            provider,
+            accessToken,
+          },
+        },
+      }),
+    })
+
+    const data = await response.json()
+
+    if (data.data?.socialSignIn?.success) {
+      return {
+        success: true,
+      }
+    } else {
+      return {
+        success: false,
+        error: data.data?.socialSignIn?.message || data.errors?.[0]?.message || 'Social login failed',
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error',
+    }
+  }
+}
+
+// Server action for logout
+export async function logoutAction() {
+  // Logout is handled by backend
+  redirect('/auth/signin')
+}
 

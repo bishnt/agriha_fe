@@ -12,44 +12,29 @@ import {
   createHttpLink,
   NormalizedCacheObject,
 } from "@apollo/client";
-import { setContext } from "@apollo/client/link/context";
 
 const httpLink = createHttpLink({
   uri:
-    process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ??
+    // Prefer local proxy to avoid CORS in the browser
+    (typeof window !== "undefined" ? "/api/graphql" : undefined) ||
+    process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ||
+    process.env.GRAPHQL_ENDPOINT ||
     "http://localhost:4000/graphql",
-  fetchOptions: { cache: "no-store" }, // <- disable SW caching in dev
-});
-
-const authLink = setContext((_, { headers }) => {
-  let token: string | null = null;
-
-  // Access localStorage only in the browser
-  if (typeof window !== "undefined") {
-    try {
-      token = localStorage.getItem("token");
-    } catch (err) {
-      console.warn("Could not read token from localStorage:", err);
-    }
-  }
-
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    },
-  };
+  fetchOptions: { 
+    cache: "default",
+    credentials: "include" // Include cookies for backend session management
+  },
 });
 
 /* ------------------------------------------------------------------ */
-/* Singleton pattern — create once, then reuse the same client object */
+/* Singleton pattern — create once, then reuse the same client object */
 /* ------------------------------------------------------------------ */
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
 
 function createApolloClient() {
   return new ApolloClient({
-    link: authLink.concat(httpLink),
+    link: httpLink,
     cache: new InMemoryCache({
       typePolicies: {
         Query: {

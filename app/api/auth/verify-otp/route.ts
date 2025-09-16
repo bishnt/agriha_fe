@@ -16,24 +16,23 @@ export async function POST(request: NextRequest) {
     // GraphQL mutation for verifying OTP
     const graphqlQuery = {
       query: `
-        mutation VerifyOTP($input: VerifyOTPInput!) {
-          verifyOTP(input: $input) {
+        mutation VerifyOTP($verifyOtpInput: verifyOtpInput!) {
+          verifyOtp(verifyOtpInput: $verifyOtpInput) {
             success
-            tempToken
             message
           }
         }
       `,
       variables: {
-        input: {
-          mobileNumber,
+        verifyOtpInput: {
+          phone: mobileNumber,
           otp,
         },
       },
     }
 
     // Send to your GraphQL backend
-    const response = await fetch(process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
+    const response = await fetch(process.env.GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,9 +47,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      success: data.data.verifyOTP.success,
-      tempToken: data.data.verifyOTP.tempToken,
-      message: data.data.verifyOTP.message,
+      success: data.data.verifyOtp.success,
+      message: data.data.verifyOtp.message,
     })
   } catch (error) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })

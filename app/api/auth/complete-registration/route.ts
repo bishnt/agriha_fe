@@ -2,35 +2,28 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { mobileNumber, password } = await request.json()
+    const { phone, email, firstname, lastname, password } = await request.json()
     const authHeader = request.headers.get("authorization")
     const tempToken = authHeader?.replace("Bearer ", "")
 
     // GraphQL mutation for completing registration
     const graphqlQuery = {
       query: `
-        mutation CompleteRegistration($input: CompleteRegistrationInput!) {
-          completeRegistration(input: $input) {
-            token
-            user {
-              id
-              phone
-              name
-              email
-            }
+        mutation CreateAccount($createAccountInput: CreateAccountInput!) {
+          createAccount(createAccountInput: $createAccountInput) {
+            success
+            message
+            account { id phone email firstname lastname }
           }
         }
       `,
       variables: {
-        input: {
-          mobileNumber,
-          password,
-        },
+        createAccountInput: { phone, email, firstname, lastname, password },
       },
     }
 
     // Send to your GraphQL backend
-    const response = await fetch(process.env.GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
+    const response = await fetch(process.env.GRAPHQL_ENDPOINT || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:4000/graphql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,10 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: data.errors[0].message }, { status: 400 })
     }
 
-    return NextResponse.json({
-      token: data.data.completeRegistration.token,
-      user: data.data.completeRegistration.user,
-    })
+    return NextResponse.json(data.data.createAccount)
   } catch (error) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }

@@ -11,9 +11,10 @@ export interface PropertyCardProps {
   property: Property;
   onViewDetails?: (propertyId: string) => void;
   onToggleLike?: (propertyId: string, isLiked: boolean) => void;
+  isDesktopListView?: boolean;
 }
 
-export default function PropertyCard({ property, onViewDetails, onToggleLike }: PropertyCardProps) {
+export default function PropertyCard({ property, onViewDetails, onToggleLike, isDesktopListView = false }: PropertyCardProps) {
 
   const handleCardClick = () => {
     onViewDetails?.(property.id.toString());
@@ -21,7 +22,7 @@ export default function PropertyCard({ property, onViewDetails, onToggleLike }: 
 
   const handleViewDetails = (event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent card click when clicking button
-    onViewDetails?.(property.id.toString());
+    window.location.href = `/property/${property.id}`;
   }
 
   const handleLikeClick = (event: React.MouseEvent) => {

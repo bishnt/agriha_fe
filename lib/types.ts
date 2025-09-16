@@ -139,3 +139,12 @@ export interface SearchSectionProps {
   onBlur?: () => void;
   className?: string;
 }
+
+// Review interface for property reviews
+export interface Review {
+  id: number;
+  propertyId: number;
+  accountId: number;
+  rating: number;
+  comment: string;
+}
