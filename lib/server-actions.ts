@@ -230,18 +230,36 @@ export async function sendOtp(input: { phone?: string; email?: string }) {
   }
 }
 
-export async function verifyOtp(input: { phone?: string; email?: string; otp: string }) {
+export async function verifyOtp(input: { phone?: string; email?: string; otp: string; message?: string }) {
   try {
     const client = getServerApolloClient();
     const { data } = await client.mutate({
       mutation: VERIFY_OTP_MUTATION,
-      variables: { input },
+      variables: { 
+        verifyOtpInput: {
+          ...input,
+          message: input.message || "OTP verification request"
+        }
+      },
     });
     
     return { success: true, data: data.verifyOtp };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error verifying OTP:", error);
-    return { success: false, error: "Failed to verify OTP" };
+    
+    // Log GraphQL errors for debugging
+    if (error.graphQLErrors?.length > 0) {
+      console.error("GraphQL Errors:", error.graphQLErrors);
+    }
+    if (error.networkError?.result?.errors) {
+      console.error("Network Error Details:", error.networkError.result.errors);
+    }
+    
+    const errorMessage = error.graphQLErrors?.[0]?.message || 
+                        error.networkError?.result?.errors?.[0]?.message || 
+                        "Failed to verify OTP";
+    
+    return { success: false, error: errorMessage };
   }
 }
 

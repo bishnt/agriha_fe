@@ -164,8 +164,8 @@ export const SEND_OTP_MUTATION = gql`
 `;
 
 export const VERIFY_OTP_MUTATION = gql`
-  mutation VerifyOtp($input: verifyOtpInput!) {
-    verifyOtp(input: $input) {
+  mutation VerifyOtp($verifyOtpInput: verifyOtpInput!) {
+    verifyOtp(verifyOtpInput: $verifyOtpInput) {
       success
       message
     }
