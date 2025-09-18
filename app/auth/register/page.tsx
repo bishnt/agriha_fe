@@ -28,7 +28,9 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
 
-    if (!validateMobileNumber(mobileNumber)) {
+    const cleanedNumber = mobileNumber.replace(/\s/g, "")
+
+    if (!validateMobileNumber(cleanedNumber)) {
       setError("Please enter a valid mobile number")
       return
     }
@@ -36,23 +38,25 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     // MOCK: If phone number is 980000000, skip API and redirect
-    if (mobileNumber.replace(/\s/g, "") === "9800000000") {
-      sessionStorage.setItem("registration_mobile", mobileNumber)
+    if (cleanedNumber === "9800000000") {
+      sessionStorage.setItem("registration_mobile", cleanedNumber)
       router.push("/auth/verify-otp")
       setIsLoading(false)
       return
     }
 
     try {
-      const result = await sendOtpAction(mobileNumber.replace(/\s/g, ""))
+      const result = await sendOtpAction(cleanedNumber)
 
       if (result.success) {
-        sessionStorage.setItem("registration_mobile", mobileNumber)
+        // Store the cleaned number without spaces
+        sessionStorage.setItem("registration_mobile", cleanedNumber)
         router.push("/auth/verify-otp")
       } else {
-        setError(result.error || "Failed to send OTP. Please try again.")
+        setError(result.error || result.message || "Failed to send OTP. Please try again.")
       }
     } catch (error) {
+      console.error("Registration error:", error)
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)

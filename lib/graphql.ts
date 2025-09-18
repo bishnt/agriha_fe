@@ -114,12 +114,15 @@ export const GET_ALL_PROPERTIES_QUERY = gql`
 // ────────────────────────────────────────────────────────────────────────────────
 
 export const LOGIN_MUTATION = gql`
-  mutation Login($loginInput: loginInput!) {
-    login(loginInput: $loginInput) {
-      success
-      message
-      accessToken
-      refreshToken
+  mutation Login($input: loginInput!) {
+    login(input: $input) {
+      token
+      user {
+        id
+        email
+        phone
+        name
+      }
     }
   }
 `;

@@ -47,14 +47,23 @@ export default function SignInClient() {
         ? { email: emailOrPhone, password }
         : { phone: emailOrPhone, password }
 
-      const { data } = await loginMutation({ variables: { loginInput } })
-      const resp = data?.login
-      if (resp?.success && resp?.accessToken) {
-        localStorage.setItem("agriha_token", resp.accessToken as string)
-        if (resp.refreshToken) localStorage.setItem("agriha_refresh_token", resp.refreshToken as string)
-        router.push("/agent/dashboard")
+      const { data } = await loginMutation({ variables: { loginInput } });
+      const loginResponse = data?.login;
+
+      if (!loginResponse) {
+        console.error("Invalid response structure:", data);
+        setError("Login failed. Invalid response from server.");
+        return;
+      }
+
+      if (loginResponse.success && loginResponse.accessToken) {
+        localStorage.setItem("agriha_token", loginResponse.accessToken);
+        if (loginResponse.refreshToken) {
+          localStorage.setItem("agriha_refresh_token", loginResponse.refreshToken);
+        }
+        router.push("/agent/dashboard");
       } else {
-        setError(resp?.message || "Invalid credentials")
+        setError(loginResponse.message || "Invalid credentials");
       }
     } catch (error) {
       setError("Login failed. Please try again.");

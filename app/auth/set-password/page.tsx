@@ -9,6 +9,9 @@ import { Eye, EyeOff, Check, X, ArrowRight, Sparkles, Lock, Shield, X as LucideX
 import { useRouter } from "next/navigation"
 
 export default function SetPasswordPage() {
+  const [firstname, setFirstname] = useState("")
+  const [lastname, setLastname] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -21,8 +24,16 @@ export default function SetPasswordPage() {
   useEffect(() => {
     const tempToken = sessionStorage.getItem("temp_verification_token")
     const mobileNumber = sessionStorage.getItem("registration_mobile")
-    if (!tempToken || !mobileNumber) {
+    const verifiedOtp = sessionStorage.getItem("verified_otp")
+    
+    if (!tempToken || !mobileNumber || !verifiedOtp) {
       router.push("/auth/access-denied")
+      return
+    }
+
+    // For mock data, don't verify with backend
+    if (mobileNumber === "9800000000" && verifiedOtp === "123456") {
+      return
     }
   }, [router])
 
@@ -56,6 +67,12 @@ export default function SetPasswordPage() {
     try {
       const tempToken = sessionStorage.getItem("temp_verification_token")
       const mobileNumber = sessionStorage.getItem("registration_mobile")
+      const verifiedOtp = sessionStorage.getItem("verified_otp")
+
+      if (!verifiedOtp || !tempToken || !mobileNumber) {
+        setError("OTP verification required")
+        return
+      }
 
       const response = await fetch("/api/auth/complete-registration", {
         method: "POST",
@@ -64,21 +81,38 @@ export default function SetPasswordPage() {
           Authorization: `Bearer ${tempToken}`,
         },
         body: JSON.stringify({
-          mobileNumber,
+          phone: mobileNumber,
+          email,
+          firstname,
+          lastname,
           password,
+          otp: verifiedOtp,
         }),
       })
 
       const data = await response.json()
 
-      if (response.ok && data.token) {
-        localStorage.setItem("agriha_token", data.token)
-        sessionStorage.setItem("user_data", JSON.stringify(data.user))
+      if (response.ok && data.success) {
+        // Store auth tokens
+        if (data.token) {
+          localStorage.setItem("agriha_token", data.token)
+        }
+        if (data.refreshToken) {
+          localStorage.setItem("agriha_refresh_token", data.refreshToken)
+        }
 
+        // Store user data
+        if (data.account) {
+          sessionStorage.setItem("user_data", JSON.stringify(data.account))
+        }
+
+        // Clean up registration data
         sessionStorage.removeItem("temp_verification_token")
         sessionStorage.removeItem("registration_mobile")
+        sessionStorage.removeItem("verified_otp")
 
-        router.push("/profile")
+        // Redirect to agent dashboard
+        router.push("/agent/dashboard")
       } else {
         setError(data.message || "Failed to create account")
       }
@@ -115,6 +149,51 @@ export default function SetPasswordPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* First Name Input */}
+              <div className="relative group">
+                <Input
+                  id="firstname"
+                  type="text"
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
+                  onFocus={() => setFocusedField("firstname")}
+                  onBlur={() => setFocusedField("")}
+                  placeholder="First Name"
+                  className="h-12 pl-4 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
+                  required
+                />
+              </div>
+
+              {/* Last Name Input */}
+              <div className="relative group">
+                <Input
+                  id="lastname"
+                  type="text"
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
+                  onFocus={() => setFocusedField("lastname")}
+                  onBlur={() => setFocusedField("")}
+                  placeholder="Last Name"
+                  className="h-12 pl-4 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
+                  required
+                />
+              </div>
+
+              {/* Email Input */}
+              <div className="relative group">
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField("")}
+                  placeholder="Email Address"
+                  className="h-12 pl-4 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
+                  required
+                />
+              </div>
+
               {/* Password Input */}
               <div className="relative group">
                 <div className="relative">

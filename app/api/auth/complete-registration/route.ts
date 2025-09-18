@@ -2,7 +2,12 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone, email, firstname, lastname, password } = await request.json()
+    const { phone, email, firstname, lastname, password, otp } = await request.json()
+    
+    if (!otp) {
+      return NextResponse.json({ message: "OTP is required for account creation" }, { status: 400 })
+    }
+
     const authHeader = request.headers.get("authorization")
     const tempToken = authHeader?.replace("Bearer ", "")
 
@@ -18,7 +23,7 @@ export async function POST(request: NextRequest) {
         }
       `,
       variables: {
-        createAccountInput: { phone, email, firstname, lastname, password },
+        createAccountInput: { phone, email, firstname, lastname, password, otp },
       },
     }
 

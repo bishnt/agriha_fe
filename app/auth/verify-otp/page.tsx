@@ -75,6 +75,7 @@ export default function VerifyOTPPage() {
     // MOCK: If OTP is 123456, skip API and proceed
     if (otpString === "123456") {
       sessionStorage.setItem("temp_verification_token", "mock-temp-token-980000000")
+      sessionStorage.setItem("verified_otp", otpString)
       router.push("/auth/set-password")
       setIsLoading(false)
       return
@@ -92,8 +93,9 @@ export default function VerifyOTPPage() {
 
       const data = await response.json()
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         sessionStorage.setItem("temp_verification_token", data.tempToken)
+        sessionStorage.setItem("verified_otp", otpString)
         router.push("/auth/set-password")
       } else {
         setError(data.message || "Invalid verification code")
