@@ -25,15 +25,8 @@ export default function SetPasswordPage() {
     const tempToken = sessionStorage.getItem("temp_verification_token")
     const mobileNumber = sessionStorage.getItem("registration_mobile")
     const verifiedOtp = sessionStorage.getItem("verified_otp")
-    
     if (!tempToken || !mobileNumber || !verifiedOtp) {
       router.push("/auth/access-denied")
-      return
-    }
-
-    // For mock data, don't verify with backend
-    if (mobileNumber === "9800000000" && verifiedOtp === "123456") {
-      return
     }
   }, [router])
 
@@ -69,7 +62,7 @@ export default function SetPasswordPage() {
       const mobileNumber = sessionStorage.getItem("registration_mobile")
       const verifiedOtp = sessionStorage.getItem("verified_otp")
 
-      if (!verifiedOtp || !tempToken || !mobileNumber) {
+      if (!verifiedOtp) {
         setError("OTP verification required")
         return
       }
@@ -92,27 +85,15 @@ export default function SetPasswordPage() {
 
       const data = await response.json()
 
-      if (response.ok && data.success) {
-        // Store auth tokens
-        if (data.token) {
-          localStorage.setItem("agriha_token", data.token)
-        }
-        if (data.refreshToken) {
-          localStorage.setItem("agriha_refresh_token", data.refreshToken)
-        }
+      if (response.ok && data.token) {
+        localStorage.setItem("agriha_token", data.token)
+        sessionStorage.setItem("user_data", JSON.stringify(data.user))
 
-        // Store user data
-        if (data.account) {
-          sessionStorage.setItem("user_data", JSON.stringify(data.account))
-        }
-
-        // Clean up registration data
         sessionStorage.removeItem("temp_verification_token")
         sessionStorage.removeItem("registration_mobile")
         sessionStorage.removeItem("verified_otp")
 
-        // Redirect to agent dashboard
-        router.push("/agent/dashboard")
+        router.push("/profile")
       } else {
         setError(data.message || "Failed to create account")
       }

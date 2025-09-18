@@ -2,43 +2,175 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 
-interface HeaderProps {
-  user?: {
-    id: string
-    name: string
-    email: string
-  } | null
-  onSignIn?: () => void
-  // Remove onPostProperty from props as it will be handled internally
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar } from "@/components/ui/avatar"
+import { useQuery, useApolloClient } from "@apollo/client"
+import { ACCOUNT_QUERY } from "@/lib/graphql"
+import { decodeJwt } from "@/lib/jwt"
+import { getAuthToken, clearAuthTokens } from "@/lib/auth-utils"
+
+interface Profile {
+  id: number;
+  firstname: string;
+  lastname: string;
+  email: string | null;
+  phone: string;
+  is_verified: boolean;
+  is_agent: boolean;
+  is_customer: boolean;
+  account_created: string;
 }
 
-export default function Header({ user, onSignIn }: HeaderProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const router = useRouter()
+interface HeaderProps {
+  user?: Profile | null;
+  onSignIn?: () => void;
+}
+
+export default function Header({ onSignIn }: HeaderProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
   const pathname = usePathname();
+  const apolloClient = useApolloClient();
+
+  // Get initial search query from URL
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const initialSearch = searchParams.get('search') || '';
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+
+  // Auth state management
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Fetch user profile using the ID from JWT token
+  const token = typeof window !== 'undefined' ? getAuthToken() : null;
+  const decodedToken = token ? decodeJwt(token) : null;
+  const { data: profileData, loading: profileLoading, refetch } = useQuery(ACCOUNT_QUERY, {
+    variables: { id: decodedToken?.userId || 0 },
+    skip: !decodedToken?.userId,
+    fetchPolicy: 'network-only', // Don't use cache
+    onError: () => {
+      handleAuthError();
+    }
+  });
+
+  // Handle auth errors
+  const handleAuthError = () => {
+    if (typeof window !== 'undefined') {
+      clearAuthTokens();
+      setIsAuthenticated(false);
+      router.push('/auth/signin');
+    }
+  };
+
+  // Watch for token changes and manage auth state
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        if (!token || !decodedToken?.userId) {
+          setIsAuthenticated(false);
+          return;
+        }
+
+        // Check if token is expired
+        const expiryDate = decodedToken.exp * 1000; // Convert to milliseconds
+        if (Date.now() >= expiryDate) {
+          handleAuthError();
+          return;
+        }
+
+        // Token is valid, set authenticated state
+        setIsAuthenticated(true);
+        await refetch();
+      } catch (error) {
+        handleAuthError();
+      }
+    };
+
+    checkAuth();
+  }, [token, decodedToken, refetch]);
+  const user = profileData?.account?.account;
 
   // Determine context
   const isAuthPage = pathname.startsWith("/auth");
   const isAgentPage = pathname.startsWith("/agent");
-   const isExlplorePage = pathname.startsWith("/explore");
+  const isExplorePage = pathname.startsWith("/explore");
   const isHomePage = pathname === "/";
 
-  const handleSignIn = () => {
-    if (onSignIn) {
-      onSignIn()
-    } else {
-      router.push("/auth/signin")
-    }
-  }
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-  // New handler for Post Property button
-  const handlePostProperty = () => {
-    router.push("/agent/dashboard");
+  const handleSignIn = async () => {
+    if (isSigningIn) return;
+    
+    setIsSigningIn(true);
+    if (onSignIn) {
+      onSignIn();
+    } else {
+      try {
+        await router.push("/auth/signin");
+      } catch (error) {
+        console.error("Navigation error:", error);
+        // Fallback to direct navigation
+        window.location.href = "/auth/signin";
+      }
+    }
+  };
+
+  const handleSignOut = async () => {
+    // Clear tokens using auth utils
+    clearAuthTokens();
+    
+    try {
+      // Reset Apollo cache
+      await apolloClient.resetStore();
+    } catch (error) {
+      console.error('Error resetting Apollo cache:', error);
+    }
+    
+    // Redirect to home with refresh
+    router.push("/");
+    router.refresh();
+  };
+
+  // Handler for Post Property button
+  // State for client-side loading
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const handlePostProperty = async () => {
+    if (profileLoading) {
+      return; // Don't do anything while loading
+    }
+    
+    if (!user) {
+      await router.push("/auth/signin");
+      return;
+    }
+    
+    try {
+      if (user.is_agent) {
+        await router.push("/agent/listProperty");
+      } else {
+        await router.push("/agent/register");
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to direct navigation
+      window.location.href = user.is_agent ? "/agent/listProperty" : "/agent/register";
+    }
   };
 
   return (
@@ -69,9 +201,9 @@ export default function Header({ user, onSignIn }: HeaderProps) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const query = formData.get("search") as string;
-                // Optionally, handle search here
+                if (searchQuery.trim()) {
+                  router.push(`/explore?search=${encodeURIComponent(searchQuery.trim())}`);
+                }
               }}
               className="hidden md:flex flex-1 justify-end mx-6"
               style={{ maxWidth: 480 }}
@@ -81,6 +213,8 @@ export default function Header({ user, onSignIn }: HeaderProps) {
                   name="search"
                   type="text"
                   placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 h-9 px-3 py-1 text-base border-0 focus:ring-0 bg-transparent placeholder:text-gray-500"
                 />
                 <Button
@@ -92,13 +226,13 @@ export default function Header({ user, onSignIn }: HeaderProps) {
               </div>
             </form>
           )}
-          {!isAuthPage && !isHomePage && !isAgentPage && !isExlplorePage && (
+          {!isAuthPage && !isHomePage && !isAgentPage && !isExplorePage && (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const query = formData.get("search") as string;
-                // Optionally, handle search here
+                if (searchQuery.trim()) {
+                  router.push(`/explore?search=${encodeURIComponent(searchQuery.trim())}`);
+                }
               }}
               className="hidden md:flex flex-1 justify-center mx-6"
               style={{ maxWidth: 480 }}
@@ -108,6 +242,8 @@ export default function Header({ user, onSignIn }: HeaderProps) {
                   name="search"
                   type="text"
                   placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 h-9 px-3 py-1 text-base border-0 focus:ring-0 bg-transparent placeholder:text-gray-500"
                 />
                 <Button
@@ -122,30 +258,79 @@ export default function Header({ user, onSignIn }: HeaderProps) {
 
           {/* Desktop Nav */}
           {!isAuthPage && (
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="hidden md:flex items-center space-x-4">
               <Button
-                onClick={handlePostProperty} // Use the new handler
-                className="bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-1.5 rounded-md font-medium text-xs transition-all duration-200"
+                onClick={handlePostProperty}
+                className="bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-2 rounded-md text-sm"
+                disabled={!isClient || profileLoading}
+                suppressHydrationWarning
               >
-                Post Property
+                {!isClient ? "Post Property" : (
+                  profileLoading ? (
+                    <span className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      Loading...
+                    </span>
+                  ) : (
+                    user?.is_agent ? "List Property" : "Post Property"
+                  )
+                )}
               </Button>
-              {user ? (
-                <div className="flex items-center space-x-2">
-                  <span className="text-gray-700 text-sm">Hi, {user.name}</span>
-                  <Button
-                    variant="outline"
-                    className="border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white px-4 py-1.5 rounded-md text-xs"
-                  >
-                    Dashboard
-                  </Button>
-                </div>
+              {profileLoading ? (
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full" disabled>
+                  <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+                </Button>
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-10 w-10">
+                        <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                          {user.firstname?.[0] || ''}{user.lastname?.[0] || '?'}
+                        </div>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{user.firstname || 'User'} {user.lastname || ''}</p>
+                        <p className="text-xs text-gray-500">{user.phone || 'No phone number'}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile">Profile</Link>
+                    </DropdownMenuItem>
+                    {user.is_agent && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/agent/dashboard">Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link href="/explore">Explore Properties</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <Button
                   onClick={handleSignIn}
                   variant="outline"
-                  className="border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white px-4 py-1.5 rounded-md text-xs transition-all duration-200"
+                  className="border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white px-4 py-2 rounded-md text-sm"
+                  disabled={isSigningIn}
                 >
-                  Sign In
+                  {isSigningIn ? (
+                    <span className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-[#002B6D]/30 border-t-[#002B6D] rounded-full animate-spin mr-2"></div>
+                      Signing in...
+                    </span>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               )}
             </div>
@@ -164,21 +349,57 @@ export default function Header({ user, onSignIn }: HeaderProps) {
         </div>
         {/* Mobile Menu */}
         {!isAuthPage && isMenuOpen && (
-          <div className="md:hidden mt-3 flex flex-col space-y-2">
+          <div className="md:hidden mt-3 flex flex-col space-y-2 pb-4">
             <Button
-              onClick={handlePostProperty} // Use the new handler
+              onClick={handlePostProperty}
               className="w-full bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-2 rounded-md text-sm"
             >
-              Post Property
+              {user?.is_agent ? "List Property" : "Post Property"}
             </Button>
-            {user ? (
+            {profileLoading ? (
+              <div className="flex items-center space-x-3 px-2">
+                <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-3 w-20 bg-gray-200 animate-pulse rounded" />
+                </div>
+              </div>
+            ) : user ? (
               <>
-                <span className="text-sm text-gray-700">Hi, {user.name}</span>
-                <Button
-                  variant="outline"
-                  className="w-full border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white px-4 py-2 rounded-md text-sm"
+                <div className="flex items-center space-x-3 px-2">
+                  <Avatar className="h-10 w-10">
+                    <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                      {user.firstname?.[0] || ''}{user.lastname?.[0] || '?'}
+                    </div>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{user.firstname || 'User'} {user.lastname || ''}</p>
+                    <p className="text-xs text-gray-500">{user.phone || 'No phone number'}</p>
+                  </div>
+                </div>
+                <Link href="/profile">
+                  <Button variant="ghost" className="w-full justify-start">
+                    Profile
+                  </Button>
+                </Link>
+                {user.is_agent && (
+                  <Link href="/agent/dashboard">
+                    <Button variant="ghost" className="w-full justify-start">
+                      Dashboard
+                    </Button>
+                  </Link>
+                )}
+                <Link href="/explore">
+                  <Button variant="ghost" className="w-full justify-start">
+                    Explore Properties
+                  </Button>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSignOut}
+                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  Dashboard
+                  Sign out
                 </Button>
               </>
             ) : (
@@ -186,8 +407,16 @@ export default function Header({ user, onSignIn }: HeaderProps) {
                 onClick={handleSignIn}
                 variant="outline"
                 className="w-full border-[#002B6D] text-[#002B6D] hover:bg-[#002B6D] hover:text-white px-4 py-2 rounded-md text-sm"
+                disabled={isSigningIn}
               >
-                Sign In
+                {isSigningIn ? (
+                  <span className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-[#002B6D]/30 border-t-[#002B6D] rounded-full animate-spin mr-2"></div>
+                    Signing in...
+                  </span>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             )}
           </div>

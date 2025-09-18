@@ -110,19 +110,32 @@ export const GET_ALL_PROPERTIES_QUERY = gql`
 `;
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Auth
+// Auth & Profile
 // ────────────────────────────────────────────────────────────────────────────────
 
+export const GET_MY_PROFILE = gql`
+  query GetMyProfile {
+    me {
+      id
+      firstname
+      lastname
+      email
+      phone
+      is_verified
+      is_agent
+      is_customer
+      account_created
+    }
+  }
+`;
+
 export const LOGIN_MUTATION = gql`
-  mutation Login($input: loginInput!) {
-    login(input: $input) {
-      token
-      user {
-        id
-        email
-        phone
-        name
-      }
+  mutation Login($loginInput: loginInput!) {
+    login(loginInput: $loginInput) {
+      success
+      message
+      accessToken
+      refreshToken
     }
   }
 `;

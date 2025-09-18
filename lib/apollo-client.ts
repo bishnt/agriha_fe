@@ -10,20 +10,32 @@ import {
   ApolloClient,
   InMemoryCache,
   createHttpLink,
+  from,
   NormalizedCacheObject,
 } from "@apollo/client";
+import { setContext } from '@apollo/client/link/context';
+import { getAuthToken } from "./auth-utils";
 
+// Create the basic HTTP link
 const httpLink = createHttpLink({
-  uri:
-    // Prefer local proxy to avoid CORS in the browser
-    (typeof window !== "undefined" ? "/api/graphql" : undefined) ||
-    process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ||
-    process.env.GRAPHQL_ENDPOINT ||
-    "http://localhost:4000/graphql",
-  fetchOptions: { 
-    cache: "default",
-    credentials: "include" // Include cookies for backend session management
-  },
+  uri: typeof window !== "undefined" 
+    ? "/api/graphql"  // Use local API route in the browser
+    : process.env.GRAPHQL_ENDPOINT!, // Use direct endpoint on server-side
+  credentials: "include", // Include cookies
+});
+
+// Auth link to add the token to headers
+const authLink = setContext((_, { headers }) => {
+  // Get the authentication token from auth utils
+  const token = getAuthToken();
+
+  // Return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    }
+  };
 });
 
 /* ------------------------------------------------------------------ */

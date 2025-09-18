@@ -10,14 +10,24 @@ import { Separator } from "@/components/ui/separator";
 import { Mail, Phone, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LOGIN_MUTATION } from "@/lib/graphql";
-import { useMutation } from "@apollo/client";
+import { useMutation, useApolloClient } from "@apollo/client";
+import { setAuthTokens } from "@/lib/auth-utils";
 
-// Extend the Session type to include accessToken
-type LoginInput = { email?: string; phone?: string; password: string }
+// Import types from auth-types
+import { LoginResponse } from "@/lib/auth-types";
+
+// Define type to match server's loginInput type
+type LoginInput = { 
+  phone: string;  // Required field
+  password: string;
+}
 
 export default function SignInClient() {
-  const [loginMutation] = useMutation(LOGIN_MUTATION);
-  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [loginMutation] = useMutation<{ login: LoginResponse }, { loginInput: LoginInput }>(
+    LOGIN_MUTATION
+  );
+  const apolloClient = useApolloClient();
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,45 +35,112 @@ export default function SignInClient() {
   const [focusedField, setFocusedField] = useState("");
   const router = useRouter();
 
-  const validateEmailOrPhone = (value: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validatePhone = (value: string) => {
     const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
-    return emailRegex.test(value) || phoneRegex.test(value);
+    return phoneRegex.test(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!validateEmailOrPhone(emailOrPhone)) {
-      setError("Please enter a valid email or phone number");
+    if (!validatePhone(phone)) {
+      setError("Please enter a valid phone number");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const loginInput: LoginInput = emailOrPhone.includes("@")
-        ? { email: emailOrPhone, password }
-        : { phone: emailOrPhone, password }
-
-      const { data } = await loginMutation({ variables: { loginInput } });
-      const loginResponse = data?.login;
-
-      if (!loginResponse) {
-        console.error("Invalid response structure:", data);
-        setError("Login failed. Invalid response from server.");
-        return;
+      const loginInput: LoginInput = {
+        phone: phone.replace(/[^\d+]/g, ''), // Clean the phone number
+        password
       }
 
-      if (loginResponse.success && loginResponse.accessToken) {
-        localStorage.setItem("agriha_token", loginResponse.accessToken);
-        if (loginResponse.refreshToken) {
-          localStorage.setItem("agriha_refresh_token", loginResponse.refreshToken);
+      try {
+        // Log the request details
+        console.log("Sending login mutation with variables:", { 
+          loginInput,
+          endpoint: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || '/api/graphql'
+        });
+        
+        const result = await loginMutation({
+          variables: { loginInput: loginInput },
+          onError: (error) => {
+            // More detailed error logging
+            console.error("GraphQL Error Details:", {
+              message: error.message,
+              graphQLErrors: error.graphQLErrors?.map(e => ({
+                message: e.message,
+                path: e.path,
+                extensions: e.extensions
+              })),
+              networkError: error.networkError && {
+                message: error.networkError.message,
+                statusCode: (error.networkError as any).statusCode,
+                response: (error.networkError as any).response
+              },
+              extraInfo: error.extraInfo
+            });
+            
+            // Set user-friendly error message based on error type
+            if (error.networkError) {
+              setError("Network error. Please check your connection and try again.");
+            } else if (error.graphQLErrors?.length) {
+              setError(error.graphQLErrors[0].message || "Server error. Please try again.");
+            } else {
+              setError(error.message || "Login failed. Please try again.");
+            }
+          }
+        });
+
+        if (!result || !result.data) {
+          console.error("Invalid response structure:", { result });
+          setError("Login failed. No response from server.");
+          return;
         }
-        router.push("/agent/dashboard");
-      } else {
-        setError(loginResponse.message || "Invalid credentials");
+
+        const loginResponse = result.data.login;
+        if (!loginResponse) {
+          console.error("Missing login data in response:", result.data);
+          setError("Login failed. Invalid response from server.");
+          return;
+        }
+
+        if (loginResponse.success && loginResponse.accessToken) {
+          // Set the tokens in both cookies and localStorage
+          if (loginResponse.accessToken && loginResponse.refreshToken) {
+            setAuthTokens(loginResponse.accessToken, loginResponse.refreshToken);
+            
+            try {
+              // Reset the Apollo Client to use the new token
+              await apolloClient.resetStore();
+            } catch (resetError) {
+              console.error("Error resetting Apollo cache:", resetError);
+              // Continue with navigation even if cache reset fails
+            }
+            
+            // Redirect to listProperty page and ensure the navigation completes
+            try {
+              await router.push("/agent/listProperty");
+              window.location.href = "/agent/listProperty"; // Force full page refresh
+            } catch (navError) {
+              console.error("Navigation error:", navError);
+              window.location.href = "/agent/listProperty"; // Fallback to direct navigation
+            }
+          } else {
+            setError("Missing authentication tokens");
+          }
+        } else {
+          setError(loginResponse.message || "Invalid credentials");
+        }
+      } catch (mutationError: any) {
+        console.error("Login mutation error:", mutationError);
+        setError(
+          mutationError.graphQLErrors?.[0]?.message || 
+          mutationError.networkError?.message || 
+          "Failed to sign in. Please try again."
+        );
       }
     } catch (error) {
       setError("Login failed. Please try again.");
@@ -125,29 +202,25 @@ export default function SignInClient() {
             
             <div className="text-center mb-8">
               <h1 className="text-2xl lg:text-3xl font-bold text-[#0B316F] mb-2">Welcome Back!</h1>
-              <p className="text-gray-600 text-base font-medium">Sign in to your AGRIHA account</p>
+              <p className="text-gray-600 text-base font-medium">Sign in with your phone number</p>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
-              {/* Email/Phone Input */}
+              {/* Phone Input */}
               <div className="relative group">
                 <Input
-                  id="emailOrPhone"
-                  type="text"
-                  value={emailOrPhone}
-                  onChange={(e) => setEmailOrPhone(e.target.value)}
-                  onFocus={() => setFocusedField("email")}
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  onFocus={() => setFocusedField("phone")}
                   onBlur={() => setFocusedField("")}
-                  placeholder="Email or Phone Number"
+                  placeholder="Phone Number"
                   className="h-12 pl-12 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                   required
                 />
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  {emailOrPhone.includes("@") ? (
-                    <Mail className="h-5 w-5 text-[#002b6d]" />
-                  ) : (
-                    <Phone className="h-5 w-5 text-[#002b6d]" />
-                  )}
+                  <Phone className="h-5 w-5 text-[#002b6d]" />
                 </div>
               </div>
               

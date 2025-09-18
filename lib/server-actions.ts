@@ -455,14 +455,6 @@ export async function getPropertyAverageRating(propertyId: string) {
 export async function sendOtpAction(mobileNumber: string) {
   try {
     const client = getServerApolloClient();
-    // First check if the number is already registered
-    if (mobileNumber === "9813522044") {
-      return { 
-        success: false, 
-        error: "This mobile number is already registered" 
-      };
-    }
-    
     const { data } = await client.mutate({
       mutation: SEND_OTP_MUTATION,
       variables: {
@@ -470,17 +462,9 @@ export async function sendOtpAction(mobileNumber: string) {
       },
     });
 
-    if (!data?.sendOtp) {
-      return { 
-        success: false, 
-        error: "Failed to send OTP. Please try again." 
-      };
-    }
-
     return { 
       success: data.sendOtp.success, 
-      message: data.sendOtp.message,
-      error: data.sendOtp.success ? undefined : data.sendOtp.message
+      message: data.sendOtp.message 
     };
   } catch (error: any) {
     console.error("Error sending OTP:", error);

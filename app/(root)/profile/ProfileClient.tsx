@@ -1,183 +1,193 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useQuery } from "@apollo/client";
-import { ACCOUNT_QUERY } from "@/lib/graphql";
+import { GET_MY_PROFILE } from "@/lib/graphql";
+import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Building, Mail, Phone, Edit } from "lucide-react";
+import Link from "next/link";
+
+interface Profile {
+  id: number;
+  firstname: string;
+  lastname: string;
+  email: string | null;
+  phone: string;
+  is_verified: boolean;
+  is_agent: boolean;
+  is_customer: boolean;
+  account_created: string;
+}
 
 export default function ProfileClient() {
-  const router = useRouter();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const [accountId, setAccountId] = useState<number | null>(null)
+  const { data, loading, error } = useQuery(GET_MY_PROFILE);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem('user_data')
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        const id = parsed?.id ?? parsed?.accountId
-        const n = typeof id === 'string' ? parseInt(id, 10) : id
-        if (Number.isFinite(n)) setAccountId(n as number)
-      }
-    } catch {}
-  }, [])
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-  const { data } = useQuery(ACCOUNT_QUERY, {
-    skip: accountId == null,
-    variables: { id: accountId as number },
-  })
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Profile</h2>
+          <p className="text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      router.push('/auth/signin');
-    } catch (error) {
-      console.error("Sign out error:", error);
-      router.push('/auth/signin');
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
+  const profile: Profile = data?.me;
 
-  const account = data?.account?.account
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Session Expired</h2>
+          <p className="text-gray-600">Please sign in again</p>
+          <Button asChild className="mt-4">
+            <Link href="/auth/signin">Sign In</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/logo.svg"
-                alt="AGRIHA"
-                width={46}
-                height={28}
-                className="mr-1 w-5 h-auto md:w-10"
-              />
-              <Image
-                src="/Agriha..png"
-                alt="AGRIHA"
-                width={160}
-                height={40}
-                className="w-20 h-auto md:w-36"
-              />
-            </Link>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {account ? (
-                  <>Welcome, {account.firstname ?? account.email ?? account.phone}</>
-                ) : (
-                  <>Profile</>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <Avatar className="w-24 h-24">
+            <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-semibold">
+              {profile.firstname[0]}{profile.lastname[0]}
+            </div>
+          </Avatar>
+          
+          <div className="flex-1">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{profile.firstname} {profile.lastname}</h1>
+                <p className="text-gray-500 mt-1">Member since {new Date(profile.account_created).toLocaleDateString()}</p>
+              </div>
+              <div className="flex gap-3 mt-4 md:mt-0">
+                <Button variant="outline" asChild>
+                  <Link href="/profile/edit">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Link>
+                </Button>
+                {!profile.is_agent && (
+                  <Button asChild>
+                    <Link href="/agent/register">
+                      <Building className="w-4 h-4 mr-2" />
+                      Become an Agent
+                    </Link>
+                  </Button>
                 )}
-              </span>
-              <Button 
-                variant="outline" 
-                onClick={handleSignOut} 
-                disabled={isSigningOut}
-                className="text-sm bg-transparent"
-              >
-                {isSigningOut ? "Signing Out..." : "Sign Out"}
-              </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Mail className="w-5 h-5" />
+                {profile.email || "No email added"}
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                <Phone className="w-5 h-5" />
+                {profile.phone}
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <p className="text-gray-600 mt-2">Manage your AGRIHA account information.</p>
-        </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="properties">My Properties</TabsTrigger>
+          <TabsTrigger value="saved">Saved Properties</TabsTrigger>
+          {profile.is_agent && (
+            <TabsTrigger value="listings">My Listings</TabsTrigger>
+          )}
+        </TabsList>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Account Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {account?.firstname && (
-                <div>
-                  <span className="text-sm font-medium text-gray-500">First Name:</span>
-                  <p className="text-sm text-gray-900">{account.firstname}</p>
-                </div>
-              )}
-              {account?.lastname && (
-                <div>
-                  <span className="text-sm font-medium text-gray-500">Last Name:</span>
-                  <p className="text-sm text-gray-900">{account.lastname}</p>
-                </div>
-              )}
-              {account?.email && (
-                <div>
-                  <span className="text-sm font-medium text-gray-500">Email:</span>
-                  <p className="text-sm text-gray-900">{account.email}</p>
-                </div>
-              )}
-              {account?.phone && (
-                <div>
-                  <span className="text-sm font-medium text-gray-500">Phone:</span>
-                  <p className="text-sm text-gray-900">{account.phone}</p>
-                </div>
-              )}
+        <TabsContent value="overview">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Account Information</h2>
+            <div className="space-y-4">
               <div>
-                <span className="text-sm font-medium text-gray-500">Account Type:</span>
-                <p className="text-sm text-gray-900">
-                  {account?.is_agent ? 'Agent' : account?.is_customer ? 'Customer' : account?.is_superadmin ? 'Admin' : 'User'}
-                </p>
+                <p className="text-sm text-gray-500">Account Type</p>
+                <p className="text-gray-900">{profile.is_agent ? "Agent" : "Customer"}</p>
               </div>
+              <Separator />
               <div>
-                <span className="text-sm font-medium text-gray-500">Verified:</span>
-                <p className="text-sm text-gray-900">{account?.is_verified ? 'Yes' : 'No'}</p>
+                <p className="text-sm text-gray-500">Verification Status</p>
+                <p className="text-gray-900">{profile.is_verified ? "Verified" : "Not Verified"}</p>
               </div>
-            </CardContent>
+              {profile.is_agent && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-gray-500">Agent Dashboard</p>
+                    <Button variant="link" className="p-0" asChild>
+                      <Link href="/agent/dashboard">
+                        Go to Dashboard →
+                      </Link>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           </Card>
+        </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/agent/dashboard">
-                <Button className="w-full justify-start" variant="outline">
-                  Agent Dashboard
-                </Button>
-              </Link>
-              <Link href="/agent/listProperty">
-                <Button className="w-full justify-start" variant="outline">
-                  List New Property
-                </Button>
-              </Link>
+        <TabsContent value="properties">
+          <div className="text-center py-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Properties Yet</h3>
+            <p className="text-gray-500 mb-4">Start exploring properties to find your perfect match.</p>
+            <Button asChild>
               <Link href="/explore">
-                <Button className="w-full justify-start" variant="outline">
-                  Explore Properties
-                </Button>
+                Browse Properties
               </Link>
-            </CardContent>
-          </Card>
+            </Button>
+          </div>
+        </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Account Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline" disabled>
-                Edit Profile (Coming Soon)
+        <TabsContent value="saved">
+          <div className="text-center py-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Saved Properties</h3>
+            <p className="text-gray-500 mb-4">Save properties you like to view them later.</p>
+            <Button asChild>
+              <Link href="/explore">
+                Start Browsing
+              </Link>
+            </Button>
+          </div>
+        </TabsContent>
+
+        {profile.is_agent && (
+          <TabsContent value="listings">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Listings Yet</h3>
+              <p className="text-gray-500 mb-4">Start listing your properties to reach potential clients.</p>
+              <Button asChild>
+                <Link href="/agent/listProperty">
+                  List a Property
+                </Link>
               </Button>
-              <Button className="w-full justify-start" variant="outline" disabled>
-                Privacy Settings (Coming Soon)
-              </Button>
-              <Button className="w-full justify-start" variant="outline" disabled>
-                Notification Preferences (Coming Soon)
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }
