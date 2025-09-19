@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         if (jsonResponse.errors) {
           console.error('GraphQL Errors:', jsonResponse.errors);
         }
-      } catch (e) {
+      } catch {
         console.error('Invalid JSON response:', text);
       }
     }
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     // Normalize status to 200 so Apollo can surface GraphQL errors from body
     const status = resp.status >= 400 ? 200 : resp.status
     return new NextResponse(text || "{}", { status, headers })
-  } catch (e) {
+  } catch {
     const headers = new Headers({ "content-type": "application/json" })
     cors(headers, req)
     return NextResponse.json({ errors: [{ message: "Proxy error" }] }, { status: 502, headers })

@@ -1,6 +1,8 @@
 // GraphQL Types matching backend schema
 
 // Account Types
+export type AgentStatus = 'pending' | 'verified' | 'rejected';
+
 export interface Account {
   id: number;
   phone: string;
@@ -11,6 +13,7 @@ export interface Account {
   is_customer: boolean;
   is_superadmin: boolean;
   is_agent: boolean;
+  agent_status?: AgentStatus;
   account_created: string;
 }
 
@@ -23,10 +26,13 @@ export interface CreateAccountInput {
 }
 
 export interface UpdateAccountInput {
+  id: number; // Required field for identifying the account to update
   phone?: string;
   email?: string;
   firstname?: string;
   lastname?: string;
+  is_agent?: boolean;
+  agent_status?: AgentStatus;
 }
 
 export interface SendOtpInput {
@@ -41,7 +47,7 @@ export interface VerifyOtpInput {
 }
 
 export interface LoginInput {
-  email: string;
+  phone: string;
   password: string;
 }
 
@@ -204,7 +210,9 @@ export interface ReviewResponse extends BaseResponse {
   review?: Review;
 }
 
-export interface MutationResponse extends BaseResponse {}
+export interface MutationResponse extends BaseResponse {
+  data?: unknown; // Optional data field for mutations
+}
 
 // Agent Verification Types
 export interface AgentVerification {

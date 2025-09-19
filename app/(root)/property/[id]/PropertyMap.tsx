@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -12,6 +11,7 @@ import "leaflet/dist/leaflet.css";
 import { Property } from "@/lib/types";
 
 // Fix for default markers
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:

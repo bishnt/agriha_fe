@@ -10,19 +10,20 @@ interface EditPropertyPageProps {
 export default async function EditPropertyPage({ params }: EditPropertyPageProps) {
   // Await params to get the id
   const { id } = await params;
-  
   // Fetch user details server-side with authentication check
   const userResult = await getUserDetails();
   
   if (!userResult.success || !userResult.user) {
-    redirect('/auth/signin');
+    redirect("/auth/signin");
   }
 
+  // const user = userResult.user; // Unused for now
+  
   // Fetch property details
   const propertyResult = await getPropertyById(id);
   
   if (!propertyResult.success || !propertyResult.data) {
-    redirect('/agent/dashboard');
+    redirect("/agent/dashboard");
   }
 
   const property = propertyResult.data;

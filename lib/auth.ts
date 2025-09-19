@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 export type { Session } from '@/lib/auth-types'
 
-import type { User, Session } from '@/lib/auth-types'
+import type { Session } from '@/lib/auth-types'
 
 // Simple session management without JWT
 export async function auth(): Promise<Session | null> {
@@ -54,7 +54,7 @@ export async function login(email: string, password: string): Promise<{ success:
         error: data.data?.login?.message || data.errors?.[0]?.message || 'Login failed',
       }
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'Network error',
@@ -106,7 +106,7 @@ export async function socialLogin(provider: string, accessToken: string): Promis
         error: data.data?.socialSignIn?.message || data.errors?.[0]?.message || 'Social login failed',
       }
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'Network error',

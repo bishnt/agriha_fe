@@ -1,3 +1,5 @@
+export type AgentStatus = 'pending' | 'verified' | 'rejected';
+
 export interface User {
   id: number
   email: string | null
@@ -8,6 +10,7 @@ export interface User {
   is_customer: boolean
   is_superadmin: boolean
   is_agent: boolean
+  agent_status?: AgentStatus
   account_created: string
 }
 

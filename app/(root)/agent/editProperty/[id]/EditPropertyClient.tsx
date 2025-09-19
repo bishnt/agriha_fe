@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -8,14 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PropertyFormData, Property } from '@/lib/types';
 import { UPDATE_PROPERTY_MUTATION } from '@/lib/graphql';
-import { ArrowLeft, Save, MapPin, DollarSign, Home, Image as ImageIcon, Check, XCircle } from 'lucide-react';
-import { 
-  Wifi, AirVent, Car, Dumbbell, ShieldCheck, Monitor, Droplets, BatteryFull,
-  Trees, Layout, Bone, Shirt, Microwave, Tv, Sun, Network, Gamepad2
-} from 'lucide-react';
+import { ArrowLeft, Save, MapPin, DollarSign, Home } from 'lucide-react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-import Fuse from 'fuse.js';
 import { toast } from 'sonner';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -35,51 +29,36 @@ if (typeof window !== 'undefined') {
   });
 };
 
-// Dynamic imports for map components
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
 
-// Amenities with icons
-const AMENITIES = [
-  { name: 'WiFi', icon: <Wifi className="h-5 w-5" /> },
-  { name: 'Air Conditioning', icon: <AirVent className="h-5 w-5" /> },
-  { name: 'Parking', icon: <Car className="h-5 w-5" /> },
-  { name: 'Swimming Pool' },
-  { name: 'Gym', icon: <Dumbbell className="h-5 w-5" /> },
-  { name: 'Security', icon: <ShieldCheck className="h-5 w-5" /> },
-  { name: 'CCTV', icon: <Monitor className="h-5 w-5" /> },
-  { name: 'Elevator' },
-  { name: 'Water Supply', icon: <Droplets className="h-5 w-5" /> },
-  { name: 'Backup Electricity', icon: <BatteryFull className="h-5 w-5" /> },
-  { name: 'Garden', icon: <Trees className="h-5 w-5" /> },
-  { name: 'Balcony', icon: <Layout className="h-5 w-5" /> },
-  { name: 'Pet Friendly', icon: <Bone className="h-5 w-5" /> },
-  { name: 'Laundry', icon: <Shirt className="h-5 w-5" /> },
-  { name: 'Kitchen Appliances', icon: <Microwave className="h-5 w-5" /> },
-  { name: 'TV', icon: <Tv className="h-5 w-5" /> },
-  { name: 'Heating', icon: <Sun className="h-5 w-5" /> },
-  { name: 'Internet', icon: <Network className="h-5 w-5" /> },
-  { name: 'Playground', icon: <Gamepad2 className="h-5 w-5" /> }
-];
 
 const propertyTypes = [
   'Hostel', 'Flat', 'Room', 'Apartment', 'Villa', 'House', 'Studio', 'Penthouse',
   'Commercial', 'Office', 'Shop', 'Land', 'Warehouse'
 ];
+
+// Backend enum mappings
+const propertyTypeEnumMap: Record<string, string> = {
+  'Hostel': 'HOSTEL',
+  'Flat': 'FLAT',
+  'Room': 'ROOM',
+  'Apartment': 'APARTMENT',
+  'Villa': 'VILLA',
+  'House': 'HOUSE',
+  'Studio': 'STUDIO',
+  'Penthouse': 'PENTHOUSE',
+  'Commercial': 'COMMERCIAL',
+  'Office': 'OFFICE',
+  'Shop': 'SHOP',
+  'Land': 'LAND',
+  'Warehouse': 'WAREHOUSE'
+};
+
+const statusEnumMap: Record<string, string> = {
+  'available': 'AVAILABLE',
+  'sold': 'SOLD',
+  'rented': 'RENTED',
+  'inactive': 'INACTIVE'
+};
 
 const furnishingOptions = [
   'Unfurnished', 'Semi-furnished', 'Fully Furnished', 'Luxury Furnished', 'Attached'
@@ -130,27 +109,16 @@ const EditPropertyClient = ({ property }: EditPropertyClientProps) => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-  const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
-  const [amenitiesSearch, setAmenitiesSearch] = useState('');
-  const [showAllAmenities, setShowAllAmenities] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(
-    propertyToEdit?.latitude && propertyToEdit?.longitude 
-      ? [propertyToEdit.latitude, propertyToEdit.longitude] 
-      : null
-  );
-  const [isSelectingLocation, setIsSelectingLocation] = useState(false);
-  const [tempMarkerPosition, setTempMarkerPosition] = useState<[number, number] | null>(null);
 
-  // Refs for file input
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Apollo Client mutation for updating property
   const [updateProperty, { loading: mutationLoading }] = useMutation(UPDATE_PROPERTY_MUTATION, {
     onCompleted: (data) => {
-      if (data?.updateProperty) {
+      if (data?.updateProperty?.success) {
         toast.success('Property updated successfully!');
         router.push('/agent/dashboard');
+      } else {
+        toast.error(data?.updateProperty?.message || 'Error updating property');
       }
     },
     onError: (error) => {
@@ -159,24 +127,6 @@ const EditPropertyClient = ({ property }: EditPropertyClientProps) => {
     }
   });
 
-  // Filter amenities based on search
-  const filteredAmenities = AMENITIES.filter(amenity =>
-    amenity.name.toLowerCase().includes(amenitiesSearch.toLowerCase())
-  );
-
-  const visibleAmenities = showAllAmenities 
-    ? filteredAmenities 
-    : filteredAmenities.slice(0, 8);
-
-  // Toggle amenity selection
-  const toggleAmenity = (amenityName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      amenities: prev.amenities?.includes(amenityName)
-        ? prev.amenities.filter(a => a !== amenityName)
-        : [...(prev.amenities || []), amenityName]
-    }));
-  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -238,13 +188,39 @@ const EditPropertyClient = ({ property }: EditPropertyClientProps) => {
     }
 
     try {
+      // Transform form data to match backend schema  
+      const transformedInput = {
+        propertyName: formData.propertyName,
+        propertyType: propertyTypeEnumMap[formData.propertyType] || 'APARTMENT',
+        description: formData.description,
+        price: formData.price,
+        isForRent: formData.isForRent,
+        isForSale: formData.isForSale,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        kitchen: formData.kitchen,
+        floor: formData.floor,
+        furnishing: formData.furnishing,
+        area: formData.area,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        address: formData.address,
+        landmark: formData.landmark,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        status: statusEnumMap[formData.status] || 'AVAILABLE',
+        isActive: formData.isActive,
+        isFeatured: formData.isFeatured
+        // Note: photos and amenities are excluded as they're not part of UpdatePropertyInput
+      };
+
+      console.log("Updating property with:", transformedInput);
+
       await updateProperty({
         variables: {
           id: parseInt(propertyId),
-          input: {
-            ...formData,
-            photos: formData.photos // This needs to be an array of image URLs after actual upload
-          }
+          input: transformedInput
         }
       });
     } catch (error) {

@@ -201,7 +201,23 @@ export default function SearchBox({
       const response = await fetch(nominatimApiUrl)
       const data = await response.json()
 
-      const formattedResults: Location[] = data.map((item: any) => ({
+      interface NominatimResponse {
+        osm_id: number;
+        name?: string;
+        display_name: string;
+        address: {
+          city?: string;
+          town?: string;
+          village?: string;
+          state?: string;
+          country?: string;
+        };
+        lat: string;
+        lon: string;
+        type: string;
+      }
+
+      const formattedResults: Location[] = (data as NominatimResponse[]).map((item: NominatimResponse) => ({
         id: item.osm_id.toString(),
         name: item.name || item.display_name.split(',')[0],
         city: item.address.city || item.address.town || item.address.village || '',
@@ -219,7 +235,7 @@ export default function SearchBox({
       
       // Initial results from API
       setSearchResults(formattedResults)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error fetching Nominatim data:", error)
       setSearchResults([])
     } finally {
@@ -357,7 +373,7 @@ export default function SearchBox({
           ) : (
             value.length >= 3 && (
               <div className="p-3 text-gray-500 text-xs">
-                No results found for "{value}"
+                No results found for &quot;{value}&quot;
               </div>
             )
           )}

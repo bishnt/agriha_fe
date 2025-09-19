@@ -11,15 +11,12 @@ export default async function HomePage() {
   // const session = await auth();
   
   // Fetch properties server-side
-  console.log('HomePage: Fetching properties from backend...');
   const result = await getAllProperties();
-  console.log('HomePage: Backend response:', result);
   const initialProperties = result.success ? result.data : undefined;
 
   return (
     <HomePageClient 
       initialProperties={initialProperties || []} 
-      isAuthenticated={false}
     />
   );
 }

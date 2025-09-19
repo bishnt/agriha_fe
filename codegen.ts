@@ -2,8 +2,11 @@ import type { CodegenConfig } from "@graphql-codegen/cli"
 
 const config: CodegenConfig = {
   overwrite: true,
-  schema: process.env.GRAPHQL_SCHEMA_URL || "http://localhost:4000/graphql",
-  documents: ["graphql/**/*.ts", "components/**/*.tsx", "app/**/*.tsx"],
+  schema: process.env.GRAPHQL_ENDPOINT || "https://api-agriha.centralindia.cloudapp.azure.com/api/graphql",
+  documents: ["lib/graphql.ts", "lib/**/*.ts", "components/**/*.tsx", "app/**/*.tsx"],
+  config: {
+    skipValidation: true,
+  },
   generates: {
     "generated/graphql.ts": {
       plugins: ["typescript", "typescript-operations", "typescript-react-apollo"],

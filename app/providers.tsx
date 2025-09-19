@@ -2,6 +2,7 @@
 import { ReactNode, useMemo } from "react";
 import { ApolloProvider } from "@apollo/client";
 import getApolloClient from "@/lib/apollo-client";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 /**
  * Wraps the entire React tree in ApolloProvider.
@@ -9,5 +10,11 @@ import getApolloClient from "@/lib/apollo-client";
  */
 export default function Providers({ children }: { children: ReactNode }) {
   const client = useMemo(() => getApolloClient(), []);
-  return <ApolloProvider client={client}>{children}</ApolloProvider>;
+  return (
+    <ApolloProvider client={client}>
+      <AuthProvider>
+        {children}
+      </AuthProvider>
+    </ApolloProvider>
+  );
 }

@@ -3,10 +3,9 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowRight, Sparkles, Shield, Clock, X as LucideX } from "lucide-react"
+import { ArrowRight, Shield, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { sendOtpAction } from "@/lib/server-actions"
 
@@ -100,7 +99,7 @@ export default function VerifyOTPPage() {
       } else {
         setError(data.message || "Invalid verification code")
       }
-    } catch (error) {
+    } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
@@ -129,7 +128,7 @@ export default function VerifyOTPPage() {
           })
         }, 1000)
       }
-    } catch (error) {
+    } catch {
       setError("Failed to resend code. Please try again.")
       setCanResend(true)
     }
@@ -220,7 +219,7 @@ export default function VerifyOTPPage() {
               <div className="flex items-center justify-center gap-1 mb-2">
                 <Clock className="w-3 h-3 text-gray-400" />
                 <p className="text-gray-600 text-xs">
-                  Didn't receive the code?{" "}
+                  Didn&apos;t receive the code?{" "}
                   {canResend ? (
                     <button
                       onClick={handleResendOTP}

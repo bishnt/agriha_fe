@@ -10,11 +10,8 @@ import {
   ApolloClient,
   InMemoryCache,
   createHttpLink,
-  from,
   NormalizedCacheObject,
 } from "@apollo/client";
-import { setContext } from '@apollo/client/link/context';
-import { getAuthToken } from "./auth-utils";
 
 // Create the basic HTTP link
 const httpLink = createHttpLink({
@@ -25,18 +22,7 @@ const httpLink = createHttpLink({
 });
 
 // Auth link to add the token to headers
-const authLink = setContext((_, { headers }) => {
-  // Get the authentication token from auth utils
-  const token = getAuthToken();
-
-  // Return the headers to the context so httpLink can read them
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    }
-  };
-});
+// Authentication link removed - using cookies instead
 
 /* ------------------------------------------------------------------ */
 /* Singleton pattern — create once, then reuse the same client object */
@@ -53,7 +39,7 @@ function createApolloClient() {
           fields: {
             properties: {
               // overwrite, don’t merge paginated results
-              merge(_existing = [], incoming) {
+              merge(_, incoming) {
                 return incoming;
               },
             },

@@ -2,21 +2,15 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { gql, useMutation } from "@apollo/client";
 import PropertyCard, { PropertyCardProps } from "@/components/property-card";
 import useActiveProperty from "./useActiveProperty";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { List, Grid } from "lucide-react";
-
-const TOGGLE_LIKE = gql/* GraphQL */ `
-  mutation ToggleLike($id: ID!, $isLiked: Boolean!) {
-    toggleLike(id: $id, isLiked: $isLiked)
-  }
-`;
+import { Property } from "@/lib/types";
 
 export default function PropertyList() {
-  const [activeId, setActiveId] = useActiveProperty();
+  const [activeId] = useActiveProperty();
   const listRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const isMobile = useIsMobile();
@@ -25,15 +19,11 @@ export default function PropertyList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = isMobile ? 3 : 6;
 
-  const [toggleLike] = useMutation(TOGGLE_LIKE, {
-    optimisticResponse: () => ({
-      toggleLike: true,
-      __typename: "Mutation",
-    }),
-  });
-
-  const handleToggle: PropertyCardProps['onToggleLike'] = (id: string, isLiked: boolean) =>
-    toggleLike({ variables: { id, isLiked: !isLiked } });
+  // Placeholder for like functionality - implement when backend supports it
+  const handleToggle: PropertyCardProps['onToggleLike'] = (id: string, isLiked: boolean) => {
+    console.log('Toggle like for property:', id, 'isLiked:', !isLiked);
+    // TODO: Implement when toggleLike mutation is available in backend
+  };
 
   const scrollTo = (id: number) => {
     const el = cardRefs.current[id];
@@ -56,9 +46,7 @@ export default function PropertyList() {
   }, [activeId, viewMode]);
 
   const totalPages = Math.ceil(0 / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentProperties: any[] = [];
+  const currentProperties: Property[] = [];
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {

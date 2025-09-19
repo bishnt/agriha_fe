@@ -1,13 +1,14 @@
+import { getUserDetails } from "@/lib/server-actions";
 import ProfileClient from './ProfileClient';
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
-  const session = await auth();
+  // Fetch user details server-side with authentication check
+  const userResult = await getUserDetails();
   
-  if (!session) {
-    redirect('/auth/signin');
+  if (!userResult.success || !userResult.user) {
+    redirect("/auth/signin");
   }
 
-  return <ProfileClient />;
+  return <ProfileClient user={userResult.user} />;
 }

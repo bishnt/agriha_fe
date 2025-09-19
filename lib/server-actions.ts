@@ -17,23 +17,77 @@ import {
   REMOVE_ACCOUNT_MUTATION,
   CREATE_REVIEW_MUTATION,
   UPDATE_REVIEW_MUTATION,
-  REMOVE_REVIEW_MUTATION 
+  REMOVE_REVIEW_MUTATION,
+  ACCOUNT_QUERY
 } from "@/lib/graphql";
 import { PropertyFormData } from "@/lib/types";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { login, socialLogin } from "@/lib/auth";
 
 // Server action to get agent properties
-export async function getAgentProperties(agentId: string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getAgentProperties(_agentId: string) {
   try {
     const client = getServerApolloClient();
-    const { data } = await client.query({
+    const { data, errors } = await client.query({
       query: GET_AGENT_PROPERTIES_QUERY,
-      variables: { agentId },
+      variables: {},  // Remove agentId since the query doesn't support it yet
+      fetchPolicy: 'cache-first',
     });
-    return { success: true, data: data.agentProperties };
+    
+    // Use the same structure as getAllProperties since they use the same query
+    const resp = (data as Record<string, unknown>)?.properties;
+    
+    if (!resp) {
+      const errMsg = errors?.[0]?.message || "Invalid response from server";
+      return { success: false, error: errMsg };
+    }
+    
+    const respData = resp as Record<string, unknown>;
+    const dataObj = respData?.data as Record<string, unknown> | undefined;
+    const rawItems = dataObj?.items ?? [];
+    
+    // For now, return all properties (until we implement proper agent filtering)
+    // In the future, this should filter by accountId === agentId
+    const mapped = (rawItems as Record<string, unknown>[]).map((p) => ({
+      id: Number(p.id ?? 0),
+      title: String(p.propertyName ?? ""),
+      propertyName: String(p.propertyName ?? ""),
+      propertyType: String(p.propertyType ?? ""),
+      description: String(p.description ?? ""),
+      price: Number(p.price ?? 0),
+      priceType: p.isForRent ? "per month" : "",
+      type: String(p.propertyType ?? ""),
+      isForRent: Boolean(p.isForRent),
+      isForSale: Boolean(p.isForSale),
+      bedrooms: Number(p.bedrooms ?? 0),
+      bathrooms: Number(p.bathrooms ?? 0),
+      isAttached: Boolean(p.isAttached ?? false),
+      kitchen: Number(p.kitchen ?? 0),
+      floor: Number(p.floor ?? 0),
+      furnishing: String(p.furnishing ?? ""),
+      ammenities: Array.isArray(p.amenities) ? p.amenities as string[] : [],
+      area: Number(p.area ?? 0),
+      areaUnit: "sqft",
+      city: String(p.city ?? ""),
+      state: String(p.state ?? ""),
+      country: String(p.country ?? ""),
+      address: String(p.address ?? ""),
+      landmark: p.landmark ? String(p.landmark) : undefined,
+      latitude: p.latitude ? Number(p.latitude) : undefined,
+      longitude: p.longitude ? Number(p.longitude) : undefined,
+      status: String(p.status ?? "available"),
+      isActive: Boolean(p.isActive ?? true),
+      isFeatured: Boolean(p.isFeatured ?? false),
+      isLiked: false,
+      createdAt: p.createdAt ? new Date(String(p.createdAt)) : new Date(),
+      updatedAt: p.updatedAt ? new Date(String(p.updatedAt)) : new Date(),
+      imageUrl: p.imageUrl ? String(p.imageUrl) : undefined,
+      views: Number(p.views ?? 0),
+    }));
+    
+    return { success: Boolean(respData?.success ?? true), data: mapped };
   } catch (error) {
     console.error("Error fetching agent properties:", error);
     return { success: false, error: "Failed to fetch properties" };
@@ -41,7 +95,7 @@ export async function getAgentProperties(agentId: string) {
 }
 
 // Server action to get all properties with filters
-export async function getAllProperties(limit?: number, offset?: number, filters?: any) {
+export async function getAllProperties() {
   try {
     const client = getServerApolloClient();
     const { data, errors } = await client.query({
@@ -49,7 +103,7 @@ export async function getAllProperties(limit?: number, offset?: number, filters?
       fetchPolicy: 'cache-first',
     });
     // Guard against undefined data shape
-    const resp = (data as any)?.properties || (data as any)?.getAllProperties || null;
+    const resp = (data as Record<string, unknown>)?.properties || (data as Record<string, unknown>)?.getAllProperties || null;
 
     // If GraphQL returned errors or no recognizable payload, surface a safe error
     if (!resp) {
@@ -58,18 +112,20 @@ export async function getAllProperties(limit?: number, offset?: number, filters?
     }
 
     // Normalize items list from possible shapes
-    const rawItems = resp?.data?.items ?? resp?.items ?? resp?.results ?? [];
+    const respData = resp as Record<string, unknown>;
+    const dataObj = respData?.data as Record<string, unknown> | undefined;
+    const rawItems = dataObj?.items ?? respData?.items ?? respData?.results ?? [];
 
     // Map backend model to UI `Property` shape expected by components
-    const mapped = (rawItems as any[]).map((p) => ({
+    const mapped = (rawItems as Record<string, unknown>[]).map((p) => ({
       id: Number(p.id ?? p._id ?? 0),
-      title: p.title ?? p.propertyName ?? "",
-      propertyName: p.propertyName ?? p.title ?? "",
-      propertyType: p.propertyType ?? p.type ?? "",
-      description: p.description ?? "",
+      title: String(p.title ?? p.propertyName ?? ""),
+      propertyName: String(p.propertyName ?? p.title ?? ""),
+      propertyType: String(p.propertyType ?? p.type ?? ""),
+      description: String(p.description ?? ""),
       price: Number(p.price ?? 0),
-      priceType: p.priceType ?? (p.isForRent ? "per month" : ""),
-      type: p.type ?? p.propertyType ?? "",
+      priceType: String(p.priceType ?? (p.isForRent ? "per month" : "")),
+      type: String(p.type ?? p.propertyType ?? ""),
       isForRent: Boolean(p.isForRent),
       isForSale: Boolean(p.isForSale),
       bedrooms: Number(p.bedrooms ?? 0),
@@ -77,32 +133,32 @@ export async function getAllProperties(limit?: number, offset?: number, filters?
       isAttached: Boolean(p.isAttached ?? false),
       kitchen: Number(p.kitchen ?? 0),
       floor: Number(p.floor ?? 0),
-      furnishing: p.furnishing,
-      ammenities: p.amenities ?? p.ammenities ?? [],
+      furnishing: String(p.furnishing ?? ""),
+      ammenities: Array.isArray(p.amenities) ? p.amenities as string[] : Array.isArray(p.ammenities) ? p.ammenities as string[] : [],
       area: Number(p.area ?? 0),
-      areaUnit: p.areaUnit ?? "",
-      city: p.city ?? "",
-      state: p.state ?? "",
-      country: p.country ?? "",
-      address: p.address ?? "",
-      landmark: p.landmark,
-      latitude: p.latitude ?? undefined,
-      longitude: p.longitude ?? undefined,
-      status: p.status ?? "available",
+      areaUnit: String(p.areaUnit ?? ""),
+      city: String(p.city ?? ""),
+      state: String(p.state ?? ""),
+      country: String(p.country ?? ""),
+      address: String(p.address ?? ""),
+      landmark: p.landmark ? String(p.landmark) : undefined,
+      latitude: p.latitude ? Number(p.latitude) : undefined,
+      longitude: p.longitude ? Number(p.longitude) : undefined,
+      status: String(p.status ?? "available"),
       isActive: Boolean(p.isActive ?? true),
       isFeatured: Boolean(p.isFeatured ?? false),
       isLiked: false,
-      createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-      updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(),
-      imageUrl: p.imageUrl ?? (p.images?.[0] ?? p.photos?.[0]) ?? undefined,
+      createdAt: p.createdAt ? new Date(String(p.createdAt)) : new Date(),
+      updatedAt: p.updatedAt ? new Date(String(p.updatedAt)) : new Date(),
+      imageUrl: p.imageUrl ? String(p.imageUrl) : (Array.isArray(p.images) && p.images[0] ? String(p.images[0]) : Array.isArray(p.photos) && p.photos[0] ? String(p.photos[0]) : undefined),
       views: Number(p.views ?? 0),
     }));
 
     if (Array.isArray(mapped)) {
-      return { success: Boolean(resp?.success ?? true), data: mapped };
+      return { success: Boolean((resp as Record<string, unknown>)?.success ?? true), data: mapped };
     }
 
-    return { success: false, error: resp?.message || "Failed to fetch properties" };
+    return { success: false, error: String((resp as Record<string, unknown>)?.message ?? "Failed to fetch properties") };
   } catch (error) {
     console.error("Error fetching properties:", error);
     return { success: false, error: "Failed to fetch properties" };
@@ -158,6 +214,54 @@ export async function deleteProperty(id: string) {
   } catch (error) {
     console.error("Error deleting property:", error);
     return { success: false, error: "Failed to delete property" };
+  }
+}
+
+// Server action to get user details with authentication check
+export async function getUserDetails() {
+  try {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('agriha_token')?.value;
+    
+    if (!token) {
+      return { success: false, error: "Not authenticated", user: null };
+    }
+
+    // Decode JWT to get user ID
+    const { decodeJwt } = await import('@/lib/jwt');
+    const payload = decodeJwt(token);
+    
+    if (!payload?.userId) {
+      return { success: false, error: "Invalid token", user: null };
+    }
+
+    const client = getServerApolloClient();
+    const { data } = await client.query({
+      query: ACCOUNT_QUERY,
+      variables: { id: payload.userId },
+      fetchPolicy: 'network-only', // Always fetch fresh user data
+    });
+    
+    if (data?.account?.success && data?.account?.account) {
+      return { 
+        success: true, 
+        user: data.account.account 
+      };
+    } else {
+      return { 
+        success: false, 
+        error: data?.account?.message || "Failed to fetch user details", 
+        user: null 
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    return { 
+      success: false, 
+      error: "Failed to fetch user details", 
+      user: null 
+    };
   }
 }
 
@@ -244,19 +348,20 @@ export async function verifyOtp(input: { phone?: string; email?: string; otp: st
     });
     
     return { success: true, data: data.verifyOtp };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { graphQLErrors?: Array<{ message: string }>; networkError?: { result?: { errors?: Array<{ message: string }> } } };
     console.error("Error verifying OTP:", error);
     
     // Log GraphQL errors for debugging
-    if (error.graphQLErrors?.length > 0) {
-      console.error("GraphQL Errors:", error.graphQLErrors);
+    if (err.graphQLErrors && err.graphQLErrors.length > 0) {
+      console.error("GraphQL Errors:", err.graphQLErrors);
     }
-    if (error.networkError?.result?.errors) {
-      console.error("Network Error Details:", error.networkError.result.errors);
+    if (err.networkError?.result?.errors) {
+      console.error("Network Error Details:", err.networkError.result.errors);
     }
     
-    const errorMessage = error.graphQLErrors?.[0]?.message || 
-                        error.networkError?.result?.errors?.[0]?.message || 
+    const errorMessage = err.graphQLErrors?.[0]?.message || 
+                        err.networkError?.result?.errors?.[0]?.message || 
                         "Failed to verify OTP";
     
     return { success: false, error: errorMessage };
@@ -466,19 +571,20 @@ export async function sendOtpAction(mobileNumber: string) {
       success: data.sendOtp.success, 
       message: data.sendOtp.message 
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { graphQLErrors?: Array<{ message: string }>; networkError?: { result?: { errors?: Array<{ message: string }> } } };
     console.error("Error sending OTP:", error);
     
     // Log GraphQL errors for debugging
-    if (error.graphQLErrors?.length > 0) {
-      console.error("GraphQL Errors:", error.graphQLErrors);
+    if (err.graphQLErrors && err.graphQLErrors.length > 0) {
+      console.error("GraphQL Errors:", err.graphQLErrors);
     }
-    if (error.networkError?.result?.errors) {
-      console.error("Network Error Details:", error.networkError.result.errors);
+    if (err.networkError?.result?.errors) {
+      console.error("Network Error Details:", err.networkError.result.errors);
     }
     
-    const errorMessage = error.graphQLErrors?.[0]?.message || 
-                        error.networkError?.result?.errors?.[0]?.message || 
+    const errorMessage = err.graphQLErrors?.[0]?.message || 
+                        err.networkError?.result?.errors?.[0]?.message || 
                         "Failed to send OTP";
     
     return { success: false, error: errorMessage };

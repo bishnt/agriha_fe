@@ -1,22 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Property, SearchFilters } from "@/lib/types";
+import type { Property } from "@/lib/types";
 import HeroSection from "@/components/hero-section";
 import PropertyGrid from "@/components/property-grid";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HomePageClientProps {
   initialProperties: Property[];
-  isAuthenticated: boolean;
 }
 
-export default function HomePageClient({ initialProperties, isAuthenticated }: HomePageClientProps) {
+export default function HomePageClient({ initialProperties }: HomePageClientProps) {
+  const {} = useAuth();
   const [mounted, setMounted] = useState(false);
-  const [filters, setFilters] = useState<SearchFilters>({});
   const [properties, setProperties] = useState<Property[]>(initialProperties);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -29,20 +28,8 @@ export default function HomePageClient({ initialProperties, isAuthenticated }: H
     router.push(`/property/${propertyId}`);
   };
 
-  const handleSignIn = () => {
-    router.push("/auth/signin");
-  };
-
-  const handlePostProperty = () => {
-    if (isAuthenticated) {
-      router.push("/agent/listProperty");
-    } else {
-      router.push("/auth/signin");
-    }
-  };
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
     setLoading(true);
 
     setTimeout(() => {

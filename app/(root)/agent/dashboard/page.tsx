@@ -1,27 +1,26 @@
 // app/agent/dashboard/page.tsx
-import { auth } from "@/lib/auth";
-import { getAgentProperties } from "@/lib/server-actions";
+import { getUserDetails, getAgentProperties } from "@/lib/server-actions";
 import AgentDashboardClient from "./AgentDashboardClient";
 import { redirect } from "next/navigation";
 
 export default async function AgentDashboard() {
-  const session = await auth();
+  // Fetch user details server-side with authentication check
+  const userResult = await getUserDetails();
   
-  if (!session) {
+  if (!userResult.success || !userResult.user) {
     redirect("/auth/signin");
   }
 
-  // Get agent ID from session or use a default for now
-  const agentId = (session.user as any)?.id || "current-agent-id";
+  const user = userResult.user;
   
-  // Fetch properties server-side
-  const result = await getAgentProperties(agentId);
-  const initialProperties = result.success ? result.data : [];
+  // Fetch user's properties server-side
+  const result = await getAgentProperties(user.id.toString());
+  const initialProperties = (result.success && result.data) ? result.data : [];
 
   return (
     <AgentDashboardClient 
       initialProperties={initialProperties}
-      agentId={agentId}
+      user={user}
     />
   );
 }

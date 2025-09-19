@@ -7,11 +7,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Phone, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LOGIN_MUTATION } from "@/lib/graphql";
-import { useMutation, useApolloClient } from "@apollo/client";
-import { setAuthTokens } from "@/lib/auth-utils";
+import { useMutation } from "@apollo/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Import types from auth-types
 import { LoginResponse } from "@/lib/auth-types";
@@ -26,13 +26,14 @@ export default function SignInClient() {
   const [loginMutation] = useMutation<{ login: LoginResponse }, { loginInput: LoginInput }>(
     LOGIN_MUTATION
   );
-  const apolloClient = useApolloClient();
+  // const apolloClient = useApolloClient(); // Unused
+  const { login: authLogin } = useAuth();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [focusedField, setFocusedField] = useState("");
+  // Focus field tracking removed for now
   const router = useRouter();
 
   const validatePhone = (value: string) => {
@@ -58,31 +59,9 @@ export default function SignInClient() {
       }
 
       try {
-        // Log the request details
-        console.log("Sending login mutation with variables:", { 
-          loginInput,
-          endpoint: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || '/api/graphql'
-        });
-        
         const result = await loginMutation({
           variables: { loginInput: loginInput },
           onError: (error) => {
-            // More detailed error logging
-            console.error("GraphQL Error Details:", {
-              message: error.message,
-              graphQLErrors: error.graphQLErrors?.map(e => ({
-                message: e.message,
-                path: e.path,
-                extensions: e.extensions
-              })),
-              networkError: error.networkError && {
-                message: error.networkError.message,
-                statusCode: (error.networkError as any).statusCode,
-                response: (error.networkError as any).response
-              },
-              extraInfo: error.extraInfo
-            });
-            
             // Set user-friendly error message based on error type
             if (error.networkError) {
               setError("Network error. Please check your connection and try again.");
@@ -95,38 +74,27 @@ export default function SignInClient() {
         });
 
         if (!result || !result.data) {
-          console.error("Invalid response structure:", { result });
           setError("Login failed. No response from server.");
           return;
         }
 
         const loginResponse = result.data.login;
         if (!loginResponse) {
-          console.error("Missing login data in response:", result.data);
           setError("Login failed. Invalid response from server.");
           return;
         }
 
         if (loginResponse.success && loginResponse.accessToken) {
-          // Set the tokens in both cookies and localStorage
+          // Use auth context to handle login
           if (loginResponse.accessToken && loginResponse.refreshToken) {
-            setAuthTokens(loginResponse.accessToken, loginResponse.refreshToken);
+            authLogin(loginResponse.accessToken, loginResponse.refreshToken);
             
+            // Redirect to agent dashboard after successful login
             try {
-              // Reset the Apollo Client to use the new token
-              await apolloClient.resetStore();
-            } catch (resetError) {
-              console.error("Error resetting Apollo cache:", resetError);
-              // Continue with navigation even if cache reset fails
-            }
-            
-            // Redirect to listProperty page and ensure the navigation completes
-            try {
-              await router.push("/agent/listProperty");
-              window.location.href = "/agent/listProperty"; // Force full page refresh
-            } catch (navError) {
-              console.error("Navigation error:", navError);
-              window.location.href = "/agent/listProperty"; // Fallback to direct navigation
+              await router.push("/agent/dashboard");
+            } catch {
+              // Fallback to direct navigation
+              window.location.href = "/agent/dashboard";
             }
           } else {
             setError("Missing authentication tokens");
@@ -134,22 +102,18 @@ export default function SignInClient() {
         } else {
           setError(loginResponse.message || "Invalid credentials");
         }
-      } catch (mutationError: any) {
-        console.error("Login mutation error:", mutationError);
-        setError(
-          mutationError.graphQLErrors?.[0]?.message || 
-          mutationError.networkError?.message || 
-          "Failed to sign in. Please try again."
-        );
+      } catch (mutationError: unknown) {
+        const errorMessage = mutationError instanceof Error ? mutationError.message : "Failed to sign in. Please try again.";
+        setError(errorMessage);
       }
-    } catch (error) {
+    } catch {
       setError("Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialSignIn = async (_provider: "google" | "facebook") => {
+  const handleSocialSignIn = async () => {
     setError("Social sign-in is not available yet.")
   };
 
@@ -169,7 +133,7 @@ export default function SignInClient() {
             <div className="w-full space-y-4 mt-8">
               <Button
                 variant="outline"
-                onClick={() => handleSocialSignIn("google")}
+                onClick={() => handleSocialSignIn()}
                 className="w-full bg-white text-black hover:bg-gray-100 border-none h-12 font-semibold"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -183,7 +147,7 @@ export default function SignInClient() {
               
               <Button
                 variant="outline"
-                onClick={() => handleSocialSignIn("facebook")}
+                onClick={() => handleSocialSignIn()}
                 className="w-full bg-[#1877F2] text-white hover:bg-[#155CC2] border-none h-12 font-semibold"
               >
                 <svg className="w-5 h-5 mr-3" fill="#fff" viewBox="0 0 24 24">
@@ -213,8 +177,6 @@ export default function SignInClient() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  onFocus={() => setFocusedField("phone")}
-                  onBlur={() => setFocusedField("")}
                   placeholder="Phone Number"
                   className="h-12 pl-12 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                   required
@@ -231,8 +193,6 @@ export default function SignInClient() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setFocusedField("password")}
-                  onBlur={() => setFocusedField("")}
                   placeholder="Password"
                   className="h-12 pl-4 pr-12 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                   required
@@ -284,7 +244,7 @@ export default function SignInClient() {
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <Button
                   variant="outline"
-                  onClick={() => handleSocialSignIn("google")}
+                  onClick={() => handleSocialSignIn()}
                   className="h-12 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-[#002b6d]/30 hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center"
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -298,7 +258,7 @@ export default function SignInClient() {
                 
                 <Button
                   variant="outline"
-                  onClick={() => handleSocialSignIn("facebook")}
+                  onClick={() => handleSocialSignIn()}
                   className="h-12 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-[#002b6d]/30 hover:shadow-md transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center"
                 >
                   <svg className="w-5 h-5 mr-2" fill="#1877F2" viewBox="0 0 24 24">

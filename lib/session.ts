@@ -3,7 +3,7 @@
 export class SessionManager {
   private static instance: SessionManager
   private token: string | null = null
-  private userData: any = null
+  private userData: Record<string, unknown> | null = null
 
   private constructor() {
     if (typeof window !== "undefined") {
@@ -24,11 +24,11 @@ export class SessionManager {
     return this.token
   }
 
-  getUserData(): any {
+  getUserData(): Record<string, unknown> | null {
     return this.userData
   }
 
-  setSession(token: string, userData: any): void {
+  setSession(token: string, userData: Record<string, unknown>): void {
     this.token = token
     this.userData = userData
 
@@ -55,7 +55,7 @@ export class SessionManager {
   }
 
   // Helper method to make authenticated GraphQL requests
-  async graphqlRequest(query: string, variables?: any) {
+  async graphqlRequest(query: string, variables?: Record<string, unknown>) {
     if (!this.token) {
       throw new Error("No authentication token available")
     }

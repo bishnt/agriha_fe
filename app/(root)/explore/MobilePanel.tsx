@@ -6,7 +6,7 @@ import { ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import SearchSection from "./SearchSection"
-import { Location, Property } from "@/lib/types"
+import { Location } from '@/lib/types'
 
 interface MobilePanelProps {
   children: React.ReactNode
@@ -21,8 +21,6 @@ export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSel
   const [currentY, setCurrentY] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [windowHeight, setWindowHeight] = useState(0)
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [properties, setProperties] = useState<Property[]>([]); 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
@@ -78,7 +76,6 @@ export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSel
   const togglePanel = () => setIsOpen(!isOpen)
 
   const handleLocationSelect = (location: Location) => {
-    setSelectedLocation(location);
     onLocationSelect?.(location);
     // Close keyboard on mobile after selection
     if (typeof window !== 'undefined' && window.visualViewport) {
@@ -141,7 +138,6 @@ export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSel
         <div className="relative z-[60]"> {/* Increased z-index for search */}
 <SearchSection 
   onLocationSelect={handleLocationSelect} 
-  setProperties={setProperties}
   onFocus={handleSearchFocus}
   onBlur={handleSearchBlur}
   className="search-section"

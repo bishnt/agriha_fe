@@ -20,7 +20,12 @@ import PropertyCard from "@/components/property-card" // Adjust import path as n
 /* ──────────────────────────────────────────────────────────
    Leaflet default marker images (still needed for general markers)
    ────────────────────────────────────────────────────────── */
-delete (L.Icon.Default.prototype as any)._getIconUrl
+// Fix for Leaflet default marker icons
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+}
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",

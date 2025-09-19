@@ -74,14 +74,11 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
     type: [],
   }
 
-  // Set search query from URL params on mount and trigger search
-  useEffect(() => {
-    const searchParam = searchParams.get('search')
-    if (searchParam) {
-      setSearchQuery(searchParam)
-      fetchNominatimData(searchParam)
-    }
-  }, [searchParams])
+  const handleLocationClick = useCallback((location: Location) => {
+    onLocationSelect?.(location)
+    setSearchQuery(location.description || `${location.name}, ${location.city}`)
+    setShowRecommendations(false)
+  }, [onLocationSelect])
 
   const fetchNominatimData = useCallback(async (query: string) => {
     if (query.length < 3) {
@@ -99,7 +96,21 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
       const response = await fetch(nominatimApiUrl)
       const data = await response.json()
 
-      const formattedResults: Location[] = data.map((item: any) => ({
+      const formattedResults: Location[] = data.map((item: {
+        osm_id: number;
+        name?: string;
+        display_name: string;
+        address: {
+          city?: string;
+          town?: string;
+          village?: string;
+          state?: string;
+          country?: string;
+        };
+        lat: string;
+        lon: string;
+        type: string;
+      }) => ({
         id: item.osm_id.toString(),
         name: item.name || item.display_name.split(',')[0],
         city: item.address.city || item.address.town || item.address.village || '',
@@ -124,7 +135,16 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
     } finally {
       setLoading(false)
     }
-  }, [searchParams])
+  }, [searchParams, handleLocationClick])
+
+  // Set search query from URL params on mount and trigger search
+  useEffect(() => {
+    const searchParam = searchParams.get('search')
+    if (searchParam) {
+      setSearchQuery(searchParam)
+      fetchNominatimData(searchParam)
+    }
+  }, [searchParams, fetchNominatimData])
 
   useEffect(() => {
     if (debouncedSearchQuery && !searchParams.get('search')) {
@@ -141,12 +161,6 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
     }
   }, [searchQuery])
 
-  const handleLocationClick = useCallback((location: Location) => {
-    onLocationSelect?.(location)
-    setSearchQuery(location.description || `${location.name}, ${location.city}`)
-    setShowRecommendations(false)
-  }, [onLocationSelect])
-
   const handleSearchFocus = useCallback(() => {
     setShowRecommendations(true)
     onFocus?.()
@@ -159,9 +173,6 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
     onBlur?.()
   }, [onBlur])
 
-  const handleResultMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-  }, [])
 
   const handlePropertyTypeFilter = useCallback((type: "for_sale" | "for_rent") => {
     setActivePropertyType(prevType => prevType === type ? null : type)
@@ -267,7 +278,7 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
         ) : (
           searchQuery.length >= 3 && (
             <div className="p-3 text-gray-500 text-sm">
-              No results for "{searchQuery}"
+              No results for &quot;{searchQuery}&quot;
             </div>
           )
         )}

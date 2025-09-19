@@ -5,6 +5,9 @@ const nextConfig = {
   images: {
     domains: ['images.pexels.com','images.unsplash.com',], // replace with your actual image host (e.g. cloudinary.com)
   },
+  // eslint: {
+  //   ignoreDuringBuilds: true,
+  // },
 };
 
 module.exports = nextConfig;

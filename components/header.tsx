@@ -16,90 +16,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar } from "@/components/ui/avatar"
-import { useQuery, useApolloClient } from "@apollo/client"
-import { ACCOUNT_QUERY } from "@/lib/graphql"
-import { decodeJwt } from "@/lib/jwt"
 import { getAuthToken, clearAuthTokens } from "@/lib/auth-utils"
-
-interface Profile {
-  id: number;
-  firstname: string;
-  lastname: string;
-  email: string | null;
-  phone: string;
-  is_verified: boolean;
-  is_agent: boolean;
-  is_customer: boolean;
-  account_created: string;
-}
+import { decodeJwt } from "@/lib/jwt"
+import { User } from "@/lib/auth-types"
 
 interface HeaderProps {
-  user?: Profile | null;
   onSignIn?: () => void;
+  user?: User | null;
 }
 
-export default function Header({ onSignIn }: HeaderProps) {
+export default function Header({ onSignIn, user: propUser }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(propUser || null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const apolloClient = useApolloClient();
 
   // Get initial search query from URL
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const initialSearch = searchParams.get('search') || '';
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-
-  // Auth state management
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // Fetch user profile using the ID from JWT token
-  const token = typeof window !== 'undefined' ? getAuthToken() : null;
-  const decodedToken = token ? decodeJwt(token) : null;
-  const { data: profileData, loading: profileLoading, refetch } = useQuery(ACCOUNT_QUERY, {
-    variables: { id: decodedToken?.userId || 0 },
-    skip: !decodedToken?.userId,
-    fetchPolicy: 'network-only', // Don't use cache
-    onError: () => {
-      handleAuthError();
-    }
-  });
-
-  // Handle auth errors
-  const handleAuthError = () => {
-    if (typeof window !== 'undefined') {
-      clearAuthTokens();
-      setIsAuthenticated(false);
-      router.push('/auth/signin');
-    }
-  };
-
-  // Watch for token changes and manage auth state
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        if (!token || !decodedToken?.userId) {
-          setIsAuthenticated(false);
-          return;
-        }
-
-        // Check if token is expired
-        const expiryDate = decodedToken.exp * 1000; // Convert to milliseconds
-        if (Date.now() >= expiryDate) {
-          handleAuthError();
-          return;
-        }
-
-        // Token is valid, set authenticated state
-        setIsAuthenticated(true);
-        await refetch();
-      } catch (error) {
-        handleAuthError();
-      }
-    };
-
-    checkAuth();
-  }, [token, decodedToken, refetch]);
-  const user = profileData?.account?.account;
 
   // Determine context
   const isAuthPage = pathname.startsWith("/auth");
@@ -118,8 +55,8 @@ export default function Header({ onSignIn }: HeaderProps) {
     } else {
       try {
         await router.push("/auth/signin");
-      } catch (error) {
-        console.error("Navigation error:", error);
+      } catch (error: unknown) {
+        console.error('Navigation error:', error);
         // Fallback to direct navigation
         window.location.href = "/auth/signin";
       }
@@ -127,19 +64,10 @@ export default function Header({ onSignIn }: HeaderProps) {
   };
 
   const handleSignOut = async () => {
-    // Clear tokens using auth utils
     clearAuthTokens();
-    
-    try {
-      // Reset Apollo cache
-      await apolloClient.resetStore();
-    } catch (error) {
-      console.error('Error resetting Apollo cache:', error);
-    }
-    
-    // Redirect to home with refresh
-    router.push("/");
-    router.refresh();
+    setUser(null);
+    setIsAuthenticated(false);
+    await router.push('/auth/signin');
   };
 
   // Handler for Post Property button
@@ -148,28 +76,120 @@ export default function Header({ onSignIn }: HeaderProps) {
   
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    
+    // Check authentication status on client side
+    const checkAuth = async () => {
+      try {
+        const token = getAuthToken();
+        if (token) {
+          const payload = decodeJwt(token);
+          if (payload && payload.exp > Date.now() / 1000) {
+            setIsAuthenticated(true);
+            
+            // If no user prop provided, fetch user data from API
+            if (!propUser) {
+              try {
+                const response = await fetch('/api/user', {
+                  method: 'GET',
+                  credentials: 'include'
+                });
+                
+                if (response.ok) {
+                  const userData = await response.json();
+                  if (userData.success && userData.user) {
+                    setUser(userData.user);
+                  }
+                } else {
+                  // API failed, but token is valid - use minimal user data
+                  setUser({ 
+                    id: payload.userId, 
+                    firstname: 'User', 
+                    lastname: '',
+                    phone: '',
+                    email: '',
+                    is_verified: false,
+                    is_customer: true,
+                    is_superadmin: false,
+                    is_agent: false,
+                    account_created: new Date().toISOString()
+                  });
+                }
+              } catch (fetchError) {
+                console.error('Failed to fetch user data:', fetchError);
+                // Use minimal user data as fallback
+                setUser({ 
+                  id: payload.userId, 
+                  firstname: 'User', 
+                  lastname: '',
+                  phone: '',
+                  email: '',
+                  is_verified: false,
+                  is_customer: true,
+                  is_superadmin: false,
+                  is_agent: false,
+                  account_created: new Date().toISOString()
+                });
+              }
+            }
+          } else {
+            clearAuthTokens();
+            setIsAuthenticated(false);
+            setUser(null);
+          }
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+    
+    // Listen for storage changes (when tokens are set/removed)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'agriha_token') {
+        // Token was added or removed, re-check auth
+        checkAuth();
+      }
+    };
+    
+    // Listen for custom auth events
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('auth-changed', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-changed', handleAuthChange);
+    };
+  }, [propUser]);
 
   const handlePostProperty = async () => {
-    if (profileLoading) {
+    if (isLoading) {
       return; // Don't do anything while loading
     }
     
-    if (!user) {
+    if (!isAuthenticated || !user) {
       await router.push("/auth/signin");
       return;
     }
     
     try {
-      if (user.is_agent) {
-        await router.push("/agent/listProperty");
-      } else {
-        await router.push("/agent/register");
-      }
-    } catch (error) {
-      console.error("Navigation error:", error);
+      // All authenticated users can list properties
+      await router.push("/agent/listProperty");
+    } catch (error: unknown) {
+      console.error('Navigation error:', error);
       // Fallback to direct navigation
-      window.location.href = user.is_agent ? "/agent/listProperty" : "/agent/register";
+      window.location.href = "/agent/listProperty";
     }
   };
 
@@ -262,21 +282,21 @@ export default function Header({ onSignIn }: HeaderProps) {
               <Button
                 onClick={handlePostProperty}
                 className="bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-2 rounded-md text-sm"
-                disabled={!isClient || profileLoading}
+                disabled={!isClient || isLoading}
                 suppressHydrationWarning
               >
                 {!isClient ? "Post Property" : (
-                  profileLoading ? (
+                  isLoading ? (
                     <span className="flex items-center">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
                       Loading...
                     </span>
                   ) : (
-                    user?.is_agent ? "List Property" : "Post Property"
+                    "List Property"
                   )
                 )}
               </Button>
-              {profileLoading ? (
+              {isLoading ? (
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full" disabled>
                   <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
                 </Button>
@@ -291,22 +311,21 @@ export default function Header({ onSignIn }: HeaderProps) {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuContent className="w-56 z-[9999]" align="end">
                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium">{user.firstname || 'User'} {user.lastname || ''}</p>
                         <p className="text-xs text-gray-500">{user.phone || 'No phone number'}</p>
+                        {/* Agent status removed - all users can list properties */}
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/profile">Profile</Link>
                     </DropdownMenuItem>
-                    {user.is_agent && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/agent/dashboard">Dashboard</Link>
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem asChild>
+                      <Link href="/agent/dashboard">My Properties</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/explore">Explore Properties</Link>
                     </DropdownMenuItem>
@@ -354,9 +373,9 @@ export default function Header({ onSignIn }: HeaderProps) {
               onClick={handlePostProperty}
               className="w-full bg-[#002B6D] hover:bg-[#001a4d] text-white px-4 py-2 rounded-md text-sm"
             >
-              {user?.is_agent ? "List Property" : "Post Property"}
+                      List Property
             </Button>
-            {profileLoading ? (
+            {isLoading ? (
               <div className="flex items-center space-x-3 px-2">
                 <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
                 <div className="space-y-2">
@@ -364,7 +383,7 @@ export default function Header({ onSignIn }: HeaderProps) {
                   <div className="h-3 w-20 bg-gray-200 animate-pulse rounded" />
                 </div>
               </div>
-            ) : user ? (
+            ) : isAuthenticated && user ? (
               <>
                 <div className="flex items-center space-x-3 px-2">
                   <Avatar className="h-10 w-10">
@@ -372,9 +391,10 @@ export default function Header({ onSignIn }: HeaderProps) {
                       {user.firstname?.[0] || ''}{user.lastname?.[0] || '?'}
                     </div>
                   </Avatar>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-medium">{user.firstname || 'User'} {user.lastname || ''}</p>
                     <p className="text-xs text-gray-500">{user.phone || 'No phone number'}</p>
+                    {/* Agent status removed - all users can list properties */}
                   </div>
                 </div>
                 <Link href="/profile">
@@ -382,13 +402,11 @@ export default function Header({ onSignIn }: HeaderProps) {
                     Profile
                   </Button>
                 </Link>
-                {user.is_agent && (
-                  <Link href="/agent/dashboard">
-                    <Button variant="ghost" className="w-full justify-start">
-                      Dashboard
-                    </Button>
-                  </Link>
-                )}
+                    <Link href="/agent/dashboard">
+                      <Button variant="ghost" className="w-full justify-start">
+                        My Properties
+                      </Button>
+                    </Link>
                 <Link href="/explore">
                   <Button variant="ghost" className="w-full justify-start">
                     Explore Properties

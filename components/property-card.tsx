@@ -14,7 +14,7 @@ export interface PropertyCardProps {
   isDesktopListView?: boolean;
 }
 
-export default function PropertyCard({ property, onViewDetails, onToggleLike, isDesktopListView = false }: PropertyCardProps) {
+export default function PropertyCard({ property, onViewDetails, onToggleLike }: PropertyCardProps) {
 
   const handleCardClick = () => {
     onViewDetails?.(property.id.toString());

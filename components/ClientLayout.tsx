@@ -16,8 +16,6 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const isAuthPage = pathname.startsWith("/auth");
-  const isProfilePage =
-    pathname === "/profile" || pathname === "/(root)/profile";
 
   /**
    * Keep <body> classes in sync *after* hydration.
@@ -31,11 +29,11 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {!isProfilePage && <Header />}
+      <Header />
 
       {children}
 
-      {!isProfilePage && !isAuthPage && (
+      {!isAuthPage && (
         <div className="pb-[72px] sm:pb-0">
           <MobileNavBar />
         </div>

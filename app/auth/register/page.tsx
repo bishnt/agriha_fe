@@ -7,16 +7,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Phone, ArrowRight, Sparkles, Home, Users, Shield, X as LucideX } from "lucide-react"
+import { Phone, ArrowRight, Home, Users, Shield } from "lucide-react"
 import { sendOtpAction } from "@/lib/server-actions"
 import { useRouter } from "next/navigation"
-import { Separator } from "@/components/ui/separator"
 
 export default function RegisterPage() {
   const [mobileNumber, setMobileNumber] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [focusedField, setFocusedField] = useState("")
   const router = useRouter()
 
   const validateMobileNumber = (number: string) => {
@@ -35,14 +33,6 @@ export default function RegisterPage() {
 
     setIsLoading(true)
 
-    // MOCK: If phone number is 980000000, skip API and redirect
-    if (mobileNumber.replace(/\s/g, "") === "9800000000") {
-      sessionStorage.setItem("registration_mobile", mobileNumber)
-      router.push("/auth/verify-otp")
-      setIsLoading(false)
-      return
-    }
-
     try {
       const result = await sendOtpAction(mobileNumber.replace(/\s/g, ""))
 
@@ -52,17 +42,13 @@ export default function RegisterPage() {
       } else {
         setError(result.error || "Failed to send OTP. Please try again.")
       }
-    } catch (error) {
+    } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Add a placeholder for social sign-in
-  const handleSocialSignIn = (provider: string) => {
-    alert(`Social sign-in with ${provider} is not implemented yet.`)
-  }
 
   return (
     <div className="min-h-screen h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
@@ -114,8 +100,6 @@ export default function RegisterPage() {
                   type="tel"
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
-                  onFocus={() => setFocusedField("mobile")}
-                  onBlur={() => setFocusedField("")}
                   placeholder="Mobile Number"
                   className="h-10 pl-10 pr-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20 text-sm"
                   required
@@ -123,7 +107,7 @@ export default function RegisterPage() {
                 <div className="absolute left-3 top-[34%] transform -translate-y-1/2">
                   <Phone className="h-4 w-4 text-[#002b6d]" />
                 </div>
-                <p className="text-xs text-gray-500 mt-1 ml-2">We'll send you a verification code via SMS</p>
+                <p className="text-xs text-gray-500 mt-1 ml-2">We&apos;ll send you a verification code via SMS</p>
               </div>
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-2 animate-shake">

@@ -20,20 +20,27 @@ export const setAuthTokens = (accessToken: string, refreshToken?: string) => {
     Cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, cookieOptions);
   }
 
-  // Set in localStorage as backup
-  localStorage.setItem(AUTH_TOKEN_COOKIE, accessToken);
-  if (refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_COOKIE, refreshToken);
+  // Set in localStorage as backup (only on client side)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(AUTH_TOKEN_COOKIE, accessToken);
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_COOKIE, refreshToken);
+    }
+    
+    // Dispatch custom event to notify components of auth change
+    window.dispatchEvent(new CustomEvent('auth-changed'));
   }
 };
 
 // Get the auth token from cookies or localStorage
 export const getAuthToken = () => {
+  if (typeof window === 'undefined') return null;
   return Cookies.get(AUTH_TOKEN_COOKIE) || localStorage.getItem(AUTH_TOKEN_COOKIE);
 };
 
 // Get the refresh token from cookies or localStorage
 export const getRefreshToken = () => {
+  if (typeof window === 'undefined') return null;
   return Cookies.get(REFRESH_TOKEN_COOKIE) || localStorage.getItem(REFRESH_TOKEN_COOKIE);
 };
 
@@ -43,9 +50,14 @@ export const clearAuthTokens = () => {
   Cookies.remove(AUTH_TOKEN_COOKIE, { path: '/' });
   Cookies.remove(REFRESH_TOKEN_COOKIE, { path: '/' });
 
-  // Clear localStorage
-  localStorage.removeItem(AUTH_TOKEN_COOKIE);
-  localStorage.removeItem(REFRESH_TOKEN_COOKIE);
+  // Clear localStorage (only on client side)
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(AUTH_TOKEN_COOKIE);
+    localStorage.removeItem(REFRESH_TOKEN_COOKIE);
+    
+    // Dispatch custom event to notify components of auth change
+    window.dispatchEvent(new CustomEvent('auth-changed'));
+  }
 };
 
 // Get auth token from request headers or cookies

@@ -15,18 +15,20 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input"; // Unused import
 import { toast } from "sonner";
 import FilterPopup from "@/components/filters";
+// Removed agent status components - all users can manage properties
+import { User } from "@/lib/auth-types";
 
 type SortOption = "relevant" | "recently-posted" | "most-popular";
 
 interface AgentDashboardClientProps {
   initialProperties: Property[];
-  agentId: string;
+  user: User;
 }
 
-export default function AgentDashboardClient({ initialProperties, agentId }: AgentDashboardClientProps) {
+export default function AgentDashboardClient({ initialProperties }: AgentDashboardClientProps) {
   const [properties, setProperties] = useState<Property[]>(initialProperties || []);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,7 +72,8 @@ export default function AgentDashboardClient({ initialProperties, agentId }: Age
       } else {
         toast.error("Failed to delete property. Please try again.");
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Delete error:', err);
       toast.error("Failed to delete property. Please try again.");
     } finally {
       setDeleteLoading(false);
@@ -164,10 +167,11 @@ export default function AgentDashboardClient({ initialProperties, agentId }: Age
       ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
       : "space-y-4";
 
-  const skeletonCardLayoutClass = viewMode === "list" ? 'flex flex-row' : 'flex flex-col md:flex-row lg:flex-col';
-  const skeletonImageWidthClass = viewMode === "list" ? 'w-2/5' : 'w-full md:w-2/5 lg:w-full';
-  const skeletonImageHeightClass = viewMode === 'list' ? 'h-auto' : 'h-48';
-  const skeletonContentWidthClass = viewMode === "list" ? 'w-3/5' : 'w-full md:w-3/5 lg:w-full';
+  // Skeleton classes (unused in current implementation)
+  // const skeletonCardLayoutClass = viewMode === "list" ? 'flex flex-row' : 'flex flex-col md:flex-row lg:flex-col';
+  // const skeletonImageWidthClass = viewMode === "list" ? 'w-2/5' : 'w-full md:w-2/5 lg:w-full';
+  // const skeletonImageHeightClass = viewMode === 'list' ? 'h-auto' : 'h-48';
+  // const skeletonContentWidthClass = viewMode === "list" ? 'w-3/5' : 'w-full md:w-3/5 lg:w-full';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -176,16 +180,19 @@ export default function AgentDashboardClient({ initialProperties, agentId }: Age
         <div className="mb-6 md:mb-8">
           <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Manage Your Property Listings
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                My Property Listings
               </h1>
               <p className="text-sm md:text-base text-gray-600">
-                Efficiently oversee and update your property portfolio.
+                Efficiently manage and update your property portfolio.
               </p>
             </div>
             <div className="flex-shrink-0">
               <Link href="/agent/listProperty">
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto"
+                >
                   <Plus className="h-5 w-5 mr-2" /> Add New Property
                 </Button>
               </Link>
@@ -366,7 +373,7 @@ export default function AgentDashboardClient({ initialProperties, agentId }: Age
               <p className="text-gray-600 mb-6">
                 {searchTerm || filterStatus !== "all"
                   ? "Try adjusting your search or filter criteria."
-                  : "You haven't listed any properties yet."}
+                  : "You haven't listed any properties yet. Start by adding your first property!"}
               </p>
               <Link href="/agent/listProperty">
                 <Button>

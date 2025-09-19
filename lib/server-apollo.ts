@@ -20,7 +20,7 @@ function createServerApolloClient() {
         Query: {
           fields: {
             properties: {
-              merge(_existing = [], incoming) {
+              merge(_, incoming) {
                 return incoming;
               },
             },

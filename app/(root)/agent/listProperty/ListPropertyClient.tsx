@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PropertyFormData } from '@/lib/types'; // Assuming this type is correctly defined for 'photos' as string[]
+import { PropertyFormData } from '@/lib/types';
 import { useMap, useMapEvents } from 'react-leaflet';
 import { CREATE_PROPERTY_MUTATION, GET_AGENT_PROPERTIES_QUERY } from '@/lib/graphql';
 import { ArrowLeft, Save, MapPin, DollarSign, Home, Image as ImageIcon, Check, XCircle } from 'lucide-react';
@@ -13,11 +13,9 @@ import {
   Wifi, 
   AirVent, 
   Car, 
-  
   Dumbbell, 
   ShieldCheck, 
   Monitor, 
-   
   Droplets, 
   BatteryFull,
   Trees,
@@ -33,6 +31,9 @@ import {
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import Fuse from 'fuse.js';
+import { User } from '@/lib/auth-types';
+import { toast } from 'sonner';
+import Image from 'next/image';
 
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
@@ -72,28 +73,40 @@ const Popup = dynamic(
 
 // Nominatim API URL for landmark search
 const nominatimApiUrl = 'https://nominatim.openstreetmap.org/search';
-// Nepal Cities API URL (using a different, more reliable API for cities within Nepal)
-const nepalCitiesApiUrl = 'https://nepal-purbeli-cities-api.vercel.app/api/cities';
+// Fallback Nepal cities list
+const NEPAL_CITIES = [
+  'Kathmandu', 'Pokhara', 'Lalitpur', 'Bhaktapur', 'Biratnagar', 'Birgunj', 
+  'Dharan', 'Bharatpur', 'Janakpur', 'Hetauda', 'Nepalgunj', 'Butwal',
+  'Dhangadhi', 'Mahendranagar', 'Baglung', 'Gorkha', 'Chitwan', 'Parsa',
+  'Morang', 'Sunsari', 'Jhapa', 'Kapilvastu', 'Nawalparasi', 'Rupandehi',
+  'Dang', 'Banke', 'Bardiya', 'Kailali', 'Kanchanpur', 'Dadeldhura',
+  'Baitadi', 'Darchula', 'Bajhang', 'Bajura', 'Achham', 'Doti', 'Kailali'
+];
 
-export default function ListProperty() {
+interface ListPropertyClientProps {
+  user: User;
+}
+
+export default function ListProperty({ user }: ListPropertyClientProps) {
   // Apollo Client mutation for creating property
   const [createProperty, { loading: mutationLoading }] = useMutation(CREATE_PROPERTY_MUTATION, {
     refetchQueries: [
       {
         query: GET_AGENT_PROPERTIES_QUERY,
-        variables: { agentId: 'current-agent-id' } // Replace with actual agent ID dynamically if available
+        variables: {} // Remove agentId since the query doesn't support it yet
       }
     ],
     onCompleted: (data) => {
-      if (data?.createProperty) {
-        alert('Property listed successfully!');
-        // Optionally redirect or clear form
+      if (data?.createProperty?.success) {
+        toast.success('Property listed successfully!');
         window.location.href = '/agent/dashboard';
+      } else {
+        toast.error(data?.createProperty?.message || 'Error listing property');
       }
     },
     onError: (error) => {
       console.error('Error creating property:', error);
-      alert('Error listing property. Please try again.');
+      toast.error('Failed to create property. Please try again.');
     }
   });
 
@@ -125,7 +138,7 @@ export default function ListProperty() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [landmarkSuggestions, setLandmarkSuggestions] = useState<any[]>([]);
+  const [landmarkSuggestions, setLandmarkSuggestions] = useState<Array<{display_name: string; lat: string; lon: string; address?: {city?: string; town?: string; village?: string; state?: string; country?: string}}>>([]);
   const [citySuggestions, setCitySuggestions] = useState<string[]>([]);
   const [showLandmarkSuggestions, setShowLandmarkSuggestions] = useState(false);
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
@@ -135,20 +148,15 @@ export default function ListProperty() {
   const [tempMarkerPosition, setTempMarkerPosition] = useState<[number, number] | null>(null);
 
   // State for selected file names for display
-  const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
-
-   const [amenitiesSearch, setAmenitiesSearch] = useState('');
+  // const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
+  const [amenitiesSearch, setAmenitiesSearch] = useState('');
   const [showAllAmenities, setShowAllAmenities] = useState(false);
-
-
 
   // Refs for managing focus and click-outside for suggestions
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const landmarkInputRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input
-
-
 
 // Amenities with corresponding icons
 const AMENITIES = [
@@ -173,11 +181,39 @@ const AMENITIES = [
   { name: 'Playground', icon: <Gamepad2 className="h-5 w-5" /> }
 ];
 
-
   const propertyTypes = [
-    'Hostel', 'Flat', 'Room', 'Apartment', 'Villa', 'House', 'Studio', 'Penthouse',
-    'Commercial', 'Office', 'Shop', 'Land', 'Warehouse'
+    'Room', 'Apartment', 'House', 'Villa', 'Studio', 'Duplex', 'Office', 'Land',
+    'Flat', 'Hostel', 'Penthouse', 'Commercial', 'Shop', 'Warehouse'  // These map to valid backend enums
   ];
+
+  // Backend enum mappings - FIXED with actual backend PropertyType enum values
+  // Valid backend values: APARTMENT, HOUSE, ROOM, VILLA, OFFICE, STUDIO, DUPLEX, LAND
+  const propertyTypeEnumMap: Record<string, string> = {
+    'Hostel': 'HOUSE',      // Map to HOUSE since HOSTEL doesn't exist
+    'Flat': 'APARTMENT',    // Map to APARTMENT since FLAT doesn't exist
+    'Room': 'ROOM',         // ✅ Valid
+    'Apartment': 'APARTMENT', // ✅ Valid
+    'Villa': 'VILLA',       // ✅ Valid
+    'House': 'HOUSE',       // ✅ Valid
+    'Studio': 'STUDIO',     // ✅ Valid
+    'Duplex': 'DUPLEX',     // ✅ Valid
+    'Penthouse': 'APARTMENT', // Map to APARTMENT since PENTHOUSE doesn't exist
+    'Commercial': 'OFFICE',  // Map to OFFICE since COMMERCIAL doesn't exist
+    'Office': 'OFFICE',     // ✅ Valid
+    'Shop': 'OFFICE',       // Map to OFFICE since SHOP doesn't exist
+    'Land': 'LAND',         // ✅ Valid
+    'Warehouse': 'OFFICE'   // Map to OFFICE since WAREHOUSE doesn't exist
+  };
+
+  // PropertyStatus enum mapping - FIXED with actual backend values
+  // Valid backend values: AVAILABLE, SOLD, RENTED, PENDING
+  const statusEnumMap: Record<string, string> = {
+    'available': 'AVAILABLE', // ✅ Valid
+    'sold': 'SOLD',           // ✅ Valid
+    'rented': 'RENTED',       // ✅ Valid
+    'pending': 'PENDING',     // ✅ Valid
+    'inactive': 'PENDING'     // Map to PENDING since INACTIVE doesn't exist
+  };
 
   const furnishingOptions = [
     'Unfurnished', 'Semi-furnished', 'Fully Furnished', 'Luxury Furnished', 'Attached'
@@ -207,19 +243,9 @@ const AMENITIES = [
     'Lumbini Province', 'Karnali Province', 'Sudurpashchim Province'
   ];
 
-  // Fetch Nepal cities on component mount
+  // Initialize Nepal cities with fallback list
   useEffect(() => {
-    const fetchNepalCities = async () => {
-      try {
-        const response = await fetch(nepalCitiesApiUrl);
-        const data = await response.json();
-        // Assuming the API returns an array of objects like [{name: "Kathmandu"}, ...]
-        setNepalCities(data.map((city: { name: string }) => city.name));
-      } catch (error) {
-        console.error('Error fetching Nepal cities:', error);
-      }
-    };
-    fetchNepalCities();
+    setNepalCities(NEPAL_CITIES);
   }, []);
 
   // Custom MapClickHandler component to get map click events
@@ -299,7 +325,7 @@ const AMENITIES = [
   }, []);
 
   // Function to handle landmark selection from suggestions
-  const handleLandmarkSelect = (landmark: any) => {
+  const handleLandmarkSelect = (landmark: {display_name: string; lat: string; lon: string; address?: {city?: string; town?: string; village?: string; state?: string; country?: string}}) => {
     setFormData(prev => ({
       ...prev,
       landmark: landmark.display_name,
@@ -331,10 +357,17 @@ const AMENITIES = [
 
     // Handle city suggestions
     if (name === 'city') {
-      const fuse = new Fuse(nepalCities, { keys: [], threshold: 0.4 });
-      const results = fuse.search(value).map(result => result.item);
-      setCitySuggestions(results.slice(0, 10)); // Limit to top 10 suggestions
-      setShowCitySuggestions(true);
+      if (value.trim()) {
+        // Filter cities that match the input value
+        const filtered = nepalCities.filter(city => 
+          city.toLowerCase().includes(value.toLowerCase())
+        ).slice(0, 10);
+        setCitySuggestions(filtered);
+        setShowCitySuggestions(true);
+      } else {
+        setCitySuggestions([]);
+        setShowCitySuggestions(false);
+      }
     } else {
       setShowCitySuggestions(false);
     }
@@ -367,8 +400,6 @@ const AMENITIES = [
   };
 
   // Handle multiple photo selection
-
-
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -377,7 +408,6 @@ const AMENITIES = [
 
     const newFiles = Array.from(files);
     const newPhotoUrls = newFiles.map(file => URL.createObjectURL(file));
-    const newFileNames = newFiles.map(file => file.name);
 
     // Update formData.photos (File[])
     setFormData(prev => ({
@@ -388,8 +418,7 @@ const AMENITIES = [
     // Update preview URLs separately
     setPhotoPreviews(prev => [...prev, ...newPhotoUrls]);
 
-    // Update selected file names if needed
-    setSelectedFileNames(prev => [...prev, ...newFileNames]);
+    // File names are handled by the File objects themselves
 
     // Clear file input
     if (fileInputRef.current) {
@@ -404,9 +433,7 @@ const AMENITIES = [
       photos: prev.photos.filter((_, index) => index !== indexToRemove)
     }));
     setPhotoPreviews(prev => prev.filter((_, index) => index !== indexToRemove));
-    setSelectedFileNames(prev => prev.filter((_, index) => index !== indexToRemove));
   };
-
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -429,7 +456,7 @@ const AMENITIES = [
     if (!formData.isForRent && !formData.isForSale) {
       newErrors.listingType = 'Please select if property is for rent or sale';
     }
-    if (!formData.latitude || !formData.longitude) {
+    if (!formData.latitude || !formData.longitude || formData.latitude === 0 || formData.longitude === 0) {
       newErrors.location = 'Please select a location on the map';
     }
     if (formData.photos.length === 0) {
@@ -444,34 +471,49 @@ const AMENITIES = [
     e.preventDefault();
 
     if (!validateForm()) {
-      // Scroll to the first error or display a general error message
-      alert('Please correct the errors in the form.');
+      toast.error('Please correct the errors in the form.');
       return;
     }
 
     try {
-      // IMPORTANT: In a real application, `formData.photos` will contain local object URLs.
-      // You need to upload these images to a cloud storage service (e.g., AWS S3, Cloudinary, Firebase Storage)
-      // *before* sending the form data to your GraphQL backend.
-      // The `createProperty` mutation should receive an array of *public URLs* for the images.
-      // For this example, we're just passing the local URLs, which will likely not persist or be usable by your backend.
-      // A typical workflow would be:
-      // 1. Map `formData.photos` (local URLs) to actual `File` objects.
-      // 2. Upload each `File` to your chosen storage, getting back a public URL.
-      // 3. Replace `formData.photos` with this array of public URLs.
+      // Transform form data to match backend schema
+      const transformedInput = {
+        // Add required accountId from authenticated user
+        accountId: Number(user.id), // Ensure it's a number
+        propertyName: formData.propertyName.trim(),
+        propertyType: propertyTypeEnumMap[formData.propertyType] || 'APARTMENT',
+        description: formData.description?.trim() || '',
+        price: Number(formData.price),
+        isForRent: Boolean(formData.isForRent),
+        isForSale: Boolean(formData.isForSale),
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        kitchen: Number(formData.kitchen),
+        floor: Number(formData.floor),
+        furnishing: formData.furnishing?.trim() || null, // Use null instead of empty string
+        area: formData.area ? Number(formData.area) : null,
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        country: formData.country.trim(),
+        address: formData.address.trim(),
+        landmark: formData.landmark?.trim() || null,
+        latitude: formData.latitude ? Number(formData.latitude) : null,
+        longitude: formData.longitude ? Number(formData.longitude) : null,
+        status: statusEnumMap[formData.status] || 'AVAILABLE',
+        isActive: Boolean(formData.isActive),
+        isFeatured: Boolean(formData.isFeatured)
+        // Note: photos and amenities are excluded as they're not part of CreatePropertyInput
+      };
 
-      console.log("Submitting formData:", formData); // Log for debugging
 
       await createProperty({
         variables: {
-          input: {
-            ...formData,
-            photos: formData.photos // This needs to be an array of image URLs after actual upload
-          }
+          input: transformedInput
         }
       });
     } catch (error) {
       console.error('Error creating property:', error);
+      toast.error('Failed to create property. Please try again.');
     }
   };
 
@@ -586,6 +628,178 @@ const AMENITIES = [
             </div>
           </div>
 
+          {/* Property Details */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
+              <Home className="h-5 w-5 text-[#002b6d]" />
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Property Details</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <div>
+                <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-2">
+                  Bedrooms
+                </label>
+                <Input
+                  id="bedrooms"
+                  type="number"
+                  name="bedrooms"
+                  value={formData.bedrooms}
+                  onChange={handleInputChange}
+                  placeholder="Number of bedrooms"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-2">
+                  Bathrooms
+                </label>
+                <Input
+                  id="bathrooms"
+                  type="number"
+                  name="bathrooms"
+                  value={formData.bathrooms}
+                  onChange={handleInputChange}
+                  placeholder="Number of bathrooms"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="kitchen" className="block text-sm font-medium text-gray-700 mb-2">
+                  Kitchen
+                </label>
+                <Input
+                  id="kitchen"
+                  type="number"
+                  name="kitchen"
+                  value={formData.kitchen}
+                  onChange={handleInputChange}
+                  placeholder="Number of kitchens"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="floor" className="block text-sm font-medium text-gray-700 mb-2">
+                  Floor
+                </label>
+                <Input
+                  id="floor"
+                  type="number"
+                  name="floor"
+                  value={formData.floor}
+                  onChange={handleInputChange}
+                  placeholder="Floor number"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Amenities */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
+              <Check className="h-5 w-5 text-[#002b6d]" />
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Amenities</h2>
+            </div>
+
+            <div className="mb-4">
+              <Input
+                placeholder="Search amenities..."
+                value={amenitiesSearch}
+                onChange={(e) => setAmenitiesSearch(e.target.value)}
+                className="max-w-md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+              {visibleAmenities.map((amenity) => (
+                <div
+                  key={amenity.name}
+                  onClick={() => toggleAmenity(amenity.name)}
+                  className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                    formData.amenities?.includes(amenity.name)
+                      ? 'border-[#002b6d] bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    {amenity.icon}
+                    <span className="text-sm font-medium">{amenity.name}</span>
+                  </div>
+                  {formData.amenities?.includes(amenity.name) && (
+                    <Check className="h-4 w-4 text-[#002b6d] ml-auto" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {filteredAmenities.length > 8 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAllAmenities(!showAllAmenities)}
+                className="mt-2"
+              >
+                {showAllAmenities ? 'Show Less' : `Show More (${filteredAmenities.length - 8} more)`}
+              </Button>
+            )}
+          </div>
+
+          {/* Photos */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
+              <ImageIcon className="h-5 w-5 text-[#002b6d]" />
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">Property Photos</h2>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full sm:w-auto"
+                >
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Add Photos
+                </Button>
+                {errors.photos && (
+                  <p className="text-red-500 text-sm mt-1">{errors.photos}</p>
+                )}
+              </div>
+
+              {photoPreviews.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <Image
+                        src={preview}
+                        alt={`Property photo ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border"
+                        width={200}
+                        height={128}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(index)}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Pricing & Listing Type */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
             <div className="flex items-center space-x-2 mb-4 md:mb-6">
@@ -671,11 +885,12 @@ const AMENITIES = [
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div>
+              <div className="relative">
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
                   City *
                 </label>
                 <Input
+                  ref={cityInputRef}
                   id="city"
                   name="city"
                   value={formData.city}
@@ -685,6 +900,24 @@ const AMENITIES = [
                 />
                 {errors.city && (
                   <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                )}
+                
+                {showCitySuggestions && citySuggestions.length > 0 && (
+                  <div
+                    ref={suggestionsRef}
+                    className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg"
+                  >
+                    {citySuggestions.map((city, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                        onClick={() => handleCitySelect(city)}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -709,6 +942,38 @@ const AMENITIES = [
                 )}
               </div>
 
+              <div className="md:col-span-2 relative">
+                <label htmlFor="landmark" className="block text-sm font-medium text-gray-700 mb-2">
+                  Landmark
+                </label>
+                <Input
+                  ref={landmarkInputRef}
+                  id="landmark"
+                  name="landmark"
+                  value={formData.landmark}
+                  onChange={handleInputChange}
+                  placeholder="Enter landmark"
+                />
+                
+                {showLandmarkSuggestions && landmarkSuggestions.length > 0 && (
+                  <div
+                    ref={suggestionsRef}
+                    className="absolute z-50 top-full left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg"
+                  >
+                    {landmarkSuggestions.map((landmark, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                        onClick={() => handleLandmarkSelect(landmark)}
+                      >
+                        {landmark.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="md:col-span-2">
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
                   Address *
@@ -726,6 +991,158 @@ const AMENITIES = [
                   <p className="text-red-500 text-sm mt-1">{errors.address}</p>
                 )}
               </div>
+            </div>
+
+            {/* Enhanced Map Section */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  📍 Property Location *
+                </label>
+                <div className="flex space-x-2">
+                  {!isSelectingLocation ? (
+                    <Button
+                      type="button"
+                      variant={selectedLocation ? "outline" : "default"}
+                      size="sm"
+                      onClick={() => setIsSelectingLocation(true)}
+                      className={!selectedLocation ? "bg-[#002b6d] hover:bg-[#001a4d] text-white" : ""}
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      {selectedLocation ? 'Change Location' : 'Click to Select Location'}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setIsSelectingLocation(false);
+                        setTempMarkerPosition(null);
+                      }}
+                    >
+                      Cancel Selection
+                    </Button>
+                  )}
+                  {selectedLocation && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={resetLocationSelection}
+                    >
+                      Reset
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Location Status */}
+              <div className="mb-3 p-3 rounded-lg border bg-gray-50">
+                {!selectedLocation ? (
+                  <div className="flex items-center text-amber-600">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-medium">
+                      {isSelectingLocation 
+                        ? "Click anywhere on the map to select your property location"
+                        : "Please select the property location on the map"}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center text-green-600">
+                    <Check className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-medium">
+                      Location selected: {selectedLocation[0].toFixed(6)}, {selectedLocation[1].toFixed(6)}
+                    </span>
+                  </div>
+                )}
+                {tempMarkerPosition && (
+                  <div className="flex items-center text-[#002b6d] mt-2">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-medium">
+                      Click &quot;Confirm&quot; in the popup to set this as your property location
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Enhanced Map Container */}
+              <div className="h-80 w-full rounded-lg overflow-hidden border-2 relative">
+                {isSelectingLocation && (
+                  <div className="absolute top-2 left-2 bg-[#002b6d] text-white px-3 py-1 rounded-md text-sm font-medium z-[1000] shadow-lg">
+                    Click on the map to place a marker
+                  </div>
+                )}
+                <MapContainer
+                  center={selectedLocation || [27.7172, 85.3240]} // Default to Kathmandu
+                  zoom={selectedLocation ? 16 : 13}
+                  style={{ height: '100%', width: '100%' }}
+                  className="z-0"
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  
+                  {isSelectingLocation && (
+                    <MapClickHandler
+                      onClick={(latlng) => setTempMarkerPosition(latlng)}
+                    />
+                  )}
+                  
+                  {selectedLocation && (
+                    <>
+                      <MapViewUpdater center={selectedLocation} />
+                      <Marker position={selectedLocation}>
+                        <Popup>
+                          <div className="text-center">
+                            <p className="font-semibold text-green-600">✅ Property Location</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Lat: {selectedLocation[0].toFixed(6)}<br />
+                              Lng: {selectedLocation[1].toFixed(6)}
+                            </p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    </>
+                  )}
+                  
+                  {tempMarkerPosition && (
+                    <Marker position={tempMarkerPosition}>
+                      <Popup>
+                        <div className="text-center min-w-32">
+                          <p className="font-semibold mb-2">📍 Confirm Location?</p>
+                          <p className="text-xs text-gray-600 mb-3">
+                            Lat: {tempMarkerPosition[0].toFixed(6)}<br />
+                            Lng: {tempMarkerPosition[1].toFixed(6)}
+                          </p>
+                          <div className="flex space-x-2">
+                            <Button size="sm" onClick={confirmLocation} className="bg-[#002b6d] hover:bg-[#001a4d]">
+                              ✓ Confirm
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => setTempMarkerPosition(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                </MapContainer>
+              </div>
+              
+              {errors.location && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-red-600 text-sm font-medium flex items-center">
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {errors.location}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

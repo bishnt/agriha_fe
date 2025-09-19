@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff, Check, X, ArrowRight, Sparkles, Lock, Shield, X as LucideX } from "lucide-react"
+import { Eye, EyeOff, Check, X, ArrowRight, Lock, Shield } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function SetPasswordPage() {
@@ -18,7 +18,6 @@ export default function SetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [focusedField, setFocusedField] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -97,7 +96,7 @@ export default function SetPasswordPage() {
       } else {
         setError(data.message || "Failed to create account")
       }
-    } catch (error) {
+    } catch {
       setError("Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
@@ -137,8 +136,6 @@ export default function SetPasswordPage() {
                   type="text"
                   value={firstname}
                   onChange={(e) => setFirstname(e.target.value)}
-                  onFocus={() => setFocusedField("firstname")}
-                  onBlur={() => setFocusedField("")}
                   placeholder="First Name"
                   className="h-12 pl-4 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                   required
@@ -152,8 +149,6 @@ export default function SetPasswordPage() {
                   type="text"
                   value={lastname}
                   onChange={(e) => setLastname(e.target.value)}
-                  onFocus={() => setFocusedField("lastname")}
-                  onBlur={() => setFocusedField("")}
                   placeholder="Last Name"
                   className="h-12 pl-4 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                   required
@@ -167,8 +162,6 @@ export default function SetPasswordPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onFocus={() => setFocusedField("email")}
-                  onBlur={() => setFocusedField("")}
                   placeholder="Email Address"
                   className="h-12 pl-4 pr-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 focus:ring-2 focus:ring-[#002b6d]/20"
                   required
@@ -183,8 +176,6 @@ export default function SetPasswordPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusedField("password")}
-                    onBlur={() => setFocusedField("")}
                     placeholder="Password"
                     className="h-8 pl-3 pr-8 bg-white/50 border border-gray-200/50 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 shadow-md hover:shadow-lg text-xs"
                     required
@@ -207,8 +198,6 @@ export default function SetPasswordPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    onFocus={() => setFocusedField("confirmPassword")}
-                    onBlur={() => setFocusedField("")}
                     placeholder="Confirm Password"
                     className="h-8 pl-3 pr-8 bg-white/50 border border-gray-200/50 rounded-lg text-gray-900 focus:border-[#002b6d] focus:bg-white transition-all duration-300 shadow-md hover:shadow-lg text-xs"
                     required

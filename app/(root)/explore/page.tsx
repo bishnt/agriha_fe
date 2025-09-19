@@ -6,7 +6,7 @@ import { getAllProperties } from "@/lib/server-actions"
 export const dynamic = 'force-dynamic';
 
 export default async function ExplorePage() {
-  const result = await getAllProperties(50, 0)
+  const result = await getAllProperties()
   const properties = result.success ? result.data : undefined
   return (
     <div className="min-h-screen bg-[#F8F8FF]">

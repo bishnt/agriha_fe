@@ -52,8 +52,8 @@ export const CREATE_PROPERTY_MUTATION = gql`
 `;
 
 export const UPDATE_PROPERTY_MUTATION = gql`
-  mutation UpdateProperty($input: UpdatePropertyInput!) {
-    updateProperty(input: $input) {
+  mutation UpdateProperty($id: Int!, $input: UpdatePropertyInput!) {
+    updateProperty(id: $id, input: $input) {
       success
       message
       data {
@@ -78,8 +78,8 @@ export const DELETE_PROPERTY_MUTATION = gql`
 // ────────────────────────────────────────────────────────────────────────────────
 
 export const GET_AGENT_PROPERTIES_QUERY = gql`
-  query GetProperties($pagination: PaginationInput) {
-    properties(pagination: $pagination) {
+  query GetProperties {
+    properties {
       success
       message
       data {
@@ -113,21 +113,7 @@ export const GET_ALL_PROPERTIES_QUERY = gql`
 // Auth & Profile
 // ────────────────────────────────────────────────────────────────────────────────
 
-export const GET_MY_PROFILE = gql`
-  query GetMyProfile {
-    me {
-      id
-      firstname
-      lastname
-      email
-      phone
-      is_verified
-      is_agent
-      is_customer
-      account_created
-    }
-  }
-`;
+// GET_MY_PROFILE query not supported by backend - use ACCOUNT_QUERY with specific ID instead
 
 export const LOGIN_MUTATION = gql`
   mutation Login($loginInput: loginInput!) {
@@ -150,8 +136,8 @@ export const AUTHENTICATE_MUTATION = gql`
 `;
 
 export const CREATE_ACCOUNT_MUTATION = gql`
-  mutation CreateAccount($input: CreateAccountInput!) {
-    createAccount(input: $input) {
+  mutation CreateAccount($createAccountInput: CreateAccountInput!) {
+    createAccount(createAccountInput: $createAccountInput) {
       success
       message
       account {
@@ -189,8 +175,8 @@ export const VERIFY_OTP_MUTATION = gql`
 `;
 
 export const UPDATE_ACCOUNT_MUTATION = gql`
-  mutation UpdateAccount($input: UpdateAccountInput!) {
-    updateAccount(input: $input) {
+  mutation UpdateAccount($updateAccountInput: UpdateAccountInput!) {
+    updateAccount(updateAccountInput: $updateAccountInput) {
       success
       message
       account {
@@ -210,8 +196,8 @@ export const UPDATE_ACCOUNT_MUTATION = gql`
 `;
 
 export const REMOVE_ACCOUNT_MUTATION = gql`
-  mutation RemoveAccount {
-    removeaccount {
+  mutation RemoveAccount($id: Int!) {
+    removeaccount(id: $id) {
       success
       message
     }
@@ -220,8 +206,8 @@ export const REMOVE_ACCOUNT_MUTATION = gql`
 
 // Review mutations
 export const CREATE_REVIEW_MUTATION = gql`
-  mutation CreateReview($input: CreateReviewInput!) {
-    createReview(input: $input) {
+  mutation CreateReview($createReviewInput: CreateReviewInput!) {
+    createReview(createReviewInput: $createReviewInput) {
       success
       message
     }
@@ -229,8 +215,8 @@ export const CREATE_REVIEW_MUTATION = gql`
 `;
 
 export const UPDATE_REVIEW_MUTATION = gql`
-  mutation UpdateReview($input: UpdateReviewInput!) {
-    updateReview(input: $input) {
+  mutation UpdateReview($id: ID!, $updateReviewInput: UpdateReviewInput!) {
+    updateReview(id: $id, updateReviewInput: $updateReviewInput) {
       success
       message
     }
@@ -269,8 +255,8 @@ export const ACCOUNT_QUERY = gql`
 `;
 
 export const ACCOUNTS_QUERY = gql`
-  query Accounts {
-    accounts {
+  query Accounts($input: params!) {
+    accounts(input: $input) {
       success
       message
       accounts {
@@ -291,7 +277,7 @@ export const ACCOUNTS_QUERY = gql`
 
 // Property queries
 export const PROPERTY_QUERY = gql`
-  query Property($id: ID!) {
+  query Property($id: Int!) {
     property(id: $id) {
       success
       message
@@ -303,45 +289,36 @@ export const PROPERTY_QUERY = gql`
   ${PROPERTY_FIELDS}
 `;
 
-// Review queries
+// Review queries - Updated to match backend schema
 export const GET_ALL_REVIEWS_QUERY = gql`
   query GetAllReviews {
     getAllReviews {
-      id
-      propertyId
-      accountId
-      rating
-      comment
+      success
+      message
     }
   }
 `;
 
 export const GET_REVIEW_BY_ID_QUERY = gql`
-  query GetReviewById($id: ID!) {
+  query GetReviewById($id: Int!) {
     getReviewById(id: $id) {
-      id
-      propertyId
-      accountId
-      rating
-      comment
+      success
+      message
     }
   }
 `;
 
 export const GET_REVIEWS_BY_PROPERTY_ID_QUERY = gql`
-  query GetReviewsByPropertyId($propertyId: ID!) {
+  query GetReviewsByPropertyId($propertyId: Int!) {
     getReviewsByPropertyId(propertyId: $propertyId) {
-      id
-      propertyId
-      accountId
-      rating
-      comment
+      success
+      message
     }
   }
 `;
 
 export const CALCULATE_AVERAGE_RATING_QUERY = gql`
-  query CalculateAverageRating($propertyId: ID!) {
+  query CalculateAverageRating($propertyId: String!) {
     calculateAverageRating(propertyId: $propertyId)
   }
 `;

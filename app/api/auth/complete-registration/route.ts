@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(data.data.createAccount)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

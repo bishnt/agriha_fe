@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       success: data.data.verifyOtp.success,
       message: data.data.verifyOtp.message,
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }
