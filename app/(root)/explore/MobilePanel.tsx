@@ -6,16 +6,19 @@ import { ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import SearchSection from "./SearchSection"
-import { Location } from '@/lib/types'
+import { Location, Property } from '@/lib/types'
+import type { Dispatch, SetStateAction } from 'react'
 
 interface MobilePanelProps {
   children: React.ReactNode
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
   onLocationSelect?: (location: Location) => void
+  setProperties?: Dispatch<SetStateAction<Property[]>>
+  originalProperties?: Property[]
 }
 
-export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSelect }: MobilePanelProps) {
+export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSelect, setProperties, originalProperties }: MobilePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [startY, setStartY] = useState<number | null>(null)
   const [currentY, setCurrentY] = useState<number | null>(null)
@@ -138,6 +141,8 @@ export default function MobilePanel({ children, isOpen, setIsOpen, onLocationSel
         <div className="relative z-[60]"> {/* Increased z-index for search */}
 <SearchSection 
   onLocationSelect={handleLocationSelect} 
+  setProperties={setProperties}
+  originalProperties={originalProperties}
   onFocus={handleSearchFocus}
   onBlur={handleSearchBlur}
   className="search-section"

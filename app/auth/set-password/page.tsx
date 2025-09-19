@@ -92,7 +92,7 @@ export default function SetPasswordPage() {
         sessionStorage.removeItem("registration_mobile")
         sessionStorage.removeItem("verified_otp")
 
-        router.push("/profile")
+        router.push("/")
       } else {
         setError(data.message || "Failed to create account")
       }

@@ -24,7 +24,8 @@ export default function ExploreClient({ initialProperties }: ExploreClientProps)
   const isMobile = useIsMobile()
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [properties, setProperties] = useState<Property[]>(initialProperties)
+  const [originalProperties] = useState<Property[]>(initialProperties) // Keep original for filtering
 
   useEffect(() => {
     setIsPanelOpen(false)
@@ -47,6 +48,8 @@ export default function ExploreClient({ initialProperties }: ExploreClientProps)
             setIsOpen={setIsPanelOpen}
             // Bubble location selection from mobile search to map
             onLocationSelect={handleLocationSelect}
+            setProperties={setProperties}
+            originalProperties={originalProperties}
           >
             <div className="h-full flex flex-col">
               <PropertyList />
@@ -59,7 +62,8 @@ export default function ExploreClient({ initialProperties }: ExploreClientProps)
           <div className="p-4 pb-2">
             <SearchSectionComponent 
               onLocationSelect={handleLocationSelect} 
-              setProperties={setProperties} 
+              setProperties={setProperties}
+              originalProperties={originalProperties}
             />
           </div>
           

@@ -135,6 +135,7 @@ import type { Dispatch, SetStateAction } from 'react';
 export interface SearchSectionProps {
   onLocationSelect?: (location: Location) => void;
   setProperties?: Dispatch<SetStateAction<Property[]>>;
+  originalProperties?: Property[];
   onFocus?: () => void;
   onBlur?: () => void;
   className?: string;

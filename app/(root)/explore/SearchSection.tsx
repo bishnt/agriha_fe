@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSearchParams } from "next/navigation"
 import FilterPopup from "@/components/filters"
-import { Location, SearchSectionProps, FilterCriteria } from "@/lib/types"
+import { Location, Property, SearchSectionProps, FilterCriteria } from "@/lib/types"
 
 const popularLocations: Location[] = [
   {
@@ -47,7 +47,29 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-export default function SearchSection({ onLocationSelect, onFocus, onBlur, className }: SearchSectionProps) {
+// Calculate distance between two coordinates in kilometers
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// TODO: Implement when backend supports location-based property search
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function fetchPropertiesByLocation(location: Location): Promise<Property[]> {
+  // This will call the backend API to get properties near the selected location
+  // For now, this is a placeholder function
+  console.log('Future: Fetch properties near', location.name)
+  return []
+}
+
+export default function SearchSection({ onLocationSelect, setProperties, originalProperties, onFocus, onBlur, className }: SearchSectionProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Location[]>([])
   const [loading, setLoading] = useState(false)
@@ -78,7 +100,33 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
     onLocationSelect?.(location)
     setSearchQuery(location.description || `${location.name}, ${location.city}`)
     setShowRecommendations(false)
-  }, [onLocationSelect])
+    
+    // Filter properties by location if setProperties is provided
+    // For now, we'll implement basic client-side filtering
+    // TODO: In the future, this should call a backend API with location filters
+    // Example: fetchPropertiesByLocation(location).then(setProperties)
+    if (setProperties && originalProperties) {
+      const filteredProperties = originalProperties.filter(property => {
+        // Filter by city match
+        const cityMatch = property.city.toLowerCase().includes(location.city.toLowerCase())
+        
+        // Filter by proximity if lat/lng are available (within ~10km)
+        let proximityMatch = false
+        if (property.latitude && property.longitude) {
+          const distance = calculateDistance(
+            location.latitude, location.longitude,
+            property.latitude, property.longitude
+          )
+          proximityMatch = distance <= 10 // Within 10km
+        }
+        
+        return cityMatch || proximityMatch
+      })
+      
+      console.log(`Filtered ${filteredProperties.length} properties for location:`, location.name)
+      setProperties(filteredProperties)
+    }
+  }, [onLocationSelect, setProperties])
 
   const fetchNominatimData = useCallback(async (query: string) => {
     if (query.length < 3) {
@@ -190,9 +238,15 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     shouldKeepFocus.current = true
-    setSearchQuery(e.target.value)
+    const newQuery = e.target.value
+    setSearchQuery(newQuery)
     setShowRecommendations(true)
-  }, [])
+    
+    // Reset to show all properties when search is cleared
+    if (newQuery === '' && setProperties && originalProperties) {
+      setProperties(originalProperties)
+    }
+  }, [setProperties, originalProperties])
 
   return (
    <div className={`bg-white rounded-xl shadow-lg p-4 mb-4 w-full mx-auto relative z-[1000] ${className ?? ""}`}>
@@ -212,7 +266,13 @@ export default function SearchSection({ onLocationSelect, onFocus, onBlur, class
       {searchQuery && (
         <X 
           className="absolute right-3 top-3 h-4 w-4 text-gray-500 cursor-pointer"
-          onClick={() => setSearchQuery("")}
+          onClick={() => {
+            setSearchQuery("")
+            // Reset to show all properties when search is cleared
+            if (setProperties && originalProperties) {
+              setProperties(originalProperties)
+            }
+          }}
         />
       )}
     </div>
