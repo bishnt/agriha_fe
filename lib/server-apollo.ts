@@ -1,7 +1,30 @@
-import { ApolloClient, InMemoryCache, createHttpLink, NormalizedCacheObject } from "@apollo/client";
+import { ApolloClient, InMemoryCache, createHttpLink, NormalizedCacheObject, from } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+import { cookies } from "next/headers";
+import { AUTH_TOKEN_COOKIE } from "@/lib/auth-utils";
 
 // Server-side Apollo Client for secure API calls
 let serverApolloClient: ApolloClient<NormalizedCacheObject> | null = null;
+
+// Auth link for server-side to add JWT token from cookies
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(AUTH_TOKEN_COOKIE)?.value;
+    
+    // Return the headers to the context so httpLink can read them
+    return {
+      headers: {
+        ...headers,
+        // Add Authorization header with JWT token if available
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
+    };
+  } catch (error) {
+    console.warn('Unable to get auth token from cookies:', error);
+    return { headers };
+  }
+});
 
 const httpLink = createHttpLink({
   // Direct connection to backend GraphQL API
@@ -14,7 +37,7 @@ const httpLink = createHttpLink({
 
 function createServerApolloClient() {
   return new ApolloClient({
-    link: httpLink,
+    link: from([authLink, httpLink]),
     cache: new InMemoryCache({
       typePolicies: {
         Query: {

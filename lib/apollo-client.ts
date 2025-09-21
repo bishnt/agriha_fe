@@ -1,9 +1,9 @@
 /*
- * Shared Apollo Client factory.
+ * Shared Apollo Client factory.
  * ‑ No `"use client"` directive, so it can be imported
  *   from either server or client code.
  * ‑ `getApolloClient()` returns the same singleton per JS‑runtime
- *   (one instance in the browser, one per SSR worker thread).
+ *   (one instance in the browser, one per SSR worker thread).
  */
 
 import {
@@ -11,7 +11,10 @@ import {
   InMemoryCache,
   createHttpLink,
   NormalizedCacheObject,
+  from,
 } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+import { getAuthToken } from "@/lib/auth-utils";
 
 // Create the basic HTTP link
 const httpLink = createHttpLink({
@@ -21,8 +24,20 @@ const httpLink = createHttpLink({
   credentials: "include", // Include cookies
 });
 
-// Auth link to add the token to headers
-// Authentication link removed - using cookies instead
+// Auth link to add the JWT token to headers
+const authLink = setContext((_, { headers }) => {
+  // Get the authentication token from local storage/cookies if it exists
+  const token = getAuthToken();
+  
+  // Return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      // Add Authorization header with JWT token if user is authenticated
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    }
+  };
+});
 
 /* ------------------------------------------------------------------ */
 /* Singleton pattern — create once, then reuse the same client object */
@@ -32,7 +47,7 @@ let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
 
 function createApolloClient() {
   return new ApolloClient({
-    link: httpLink,
+    link: from([authLink, httpLink]),
     cache: new InMemoryCache({
       typePolicies: {
         Query: {
